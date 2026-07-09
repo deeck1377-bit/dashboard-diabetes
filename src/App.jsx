@@ -275,8 +275,7 @@ function Home({ go, completed }) {
               Te damos la bienvenida
             </h2>
             <p className="fd-body" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65, color: C.ink }}>
-              Este programa de educación en diabetes, dirigido por la{" "}
-              <b>Dra. Luisa Fernanda Díaz Domínguez</b>, te acompañará a través de actividades
+              Este programa de educación en diabetes te acompañará a través de actividades
               interactivas. En esta primera sesión abordarás <b>qué es la diabetes</b>, los{" "}
               <b>tipos que existen</b> y las <b>metas de control glucémico</b>: la base para un
               manejo informado y activo de tu salud.
@@ -327,7 +326,7 @@ function Home({ go, completed }) {
       </div>
 
       <p className="fd-body" style={{ textAlign: "center", fontSize: 12.5, color: C.sub, margin: "22px 8px 8px", lineHeight: 1.6 }}>
-        Programa de educación en diabetes · Dra. Luisa Fernanda Díaz Domínguez · Hecho en un modelo activo por PromptKilla Studio.<br />
+        Programa de educación en diabetes · Hecho en un modelo activo por PromptKilla Studio.<br />
         Este contenido no sustituye la consulta médica: tus metas personales las define tu equipo de salud.
       </p>
     </div>

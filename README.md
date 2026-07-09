@@ -2,7 +2,7 @@
 
 Dashboard interactivo para pacientes con diabetes — **Sesión 1: Generalidades de la diabetes**.
 
-Programa de educación en diabetes dirigido por la **Dra. Luisa Fernanda Díaz Domínguez**.
+Programa de educación en diabetes.
 Hecho en un modelo activo por **PromptKilla Studio**.
 
 ## Actividades
