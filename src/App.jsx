@@ -226,7 +226,7 @@ function Quiz({ q, options, correct, explain, onAnswered, accent = C.verde }) {
 /* ============================================================
    PANTALLA DE INICIO
    ============================================================ */
-function Home({ go, completed }) {
+function Home({ go, completed, toPortada }) {
   const acts = [
     {
       id: "llave", emoji: "🔑", color: C.rosa, soft: C.rosaSoft,
@@ -251,13 +251,22 @@ function Home({ go, completed }) {
 
   return (
     <div className="fd-pop">
-      {/* Encabezado estilo brand palette */}
-      <div style={{ textAlign: "center", padding: "26px 12px 8px" }}>
+      {/* Encabezado Trabajo 1 */}
+      <div style={{ display: "flex", justifyContent: "flex-start", paddingTop: 14 }}>
+        <button
+          onClick={toPortada}
+          className="fd-body"
+          style={{ border: `2px solid ${C.line}`, background: "#fff", borderRadius: 999, padding: "8px 16px", fontWeight: 800, fontSize: 14, color: C.ink, cursor: "pointer" }}
+        >
+          ← Portada
+        </button>
+      </div>
+      <div style={{ textAlign: "center", padding: "10px 12px 8px" }}>
         <div className="fd-body" style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.28em", color: C.sub, textTransform: "uppercase" }}>
-          Sesión educativa 1 de 3
+          Trabajo 1 · Sesión educativa 1 de 3
         </div>
-        <h1 className="fd-display" style={{ fontSize: "clamp(30px, 6vw, 46px)", margin: "10px 0 4px", color: C.ink, letterSpacing: "0.06em", fontWeight: 600 }}>
-          CONOCE <em style={{ fontWeight: 500, letterSpacing: 0, color: C.rosa }}>tu</em> DIABETES
+        <h1 className="fd-display" style={{ fontSize: "clamp(26px, 5vw, 38px)", margin: "10px 0 4px", color: C.ink, letterSpacing: "0.04em", fontWeight: 600 }}>
+          GENERALIDADES <em style={{ fontWeight: 500, letterSpacing: 0, color: C.rosa }}>de la</em> DIABETES
         </h1>
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10 }}>
           {[C.rosa, C.verde, C.menta, C.durazno, C.nude, C.terra].map((c, i) => (
@@ -901,21 +910,673 @@ function Velocimetro({ onBack, onComplete }) {
 }
 
 /* ============================================================
+   PORTADA GENERAL
+   ============================================================ */
+function Portada({ go, done1, done2 }) {
+  const p1 = Object.values(done1).filter(Boolean).length;
+  const p2 = Object.values(done2).filter(Boolean).length;
+  const trabajos = [
+    {
+      id: "home1", num: "Trabajo 1", title: "Generalidades de la diabetes",
+      desc: "Qué es la diabetes, la función del páncreas y la insulina, los tipos que existen y las metas de control glucémico.",
+      emoji: "📘", color: C.verde, soft: C.verdeSoft, prog: p1, total: 3,
+      temas: ["La llave y la cerradura", "Tarjetas comparativas", "Velocímetro glucémico"],
+    },
+    {
+      id: "home2", num: "Trabajo 2", title: "Resolver problemas",
+      desc: "Hipoglucemia e hiperglucemia: cómo reconocerlas y actuar a tiempo, cuidados en días de enfermedad y evaluación final.",
+      emoji: "🧩", color: C.terra, soft: C.terraSoft, prog: p2, total: 4,
+      temas: ["Regla del 15-15", "Semáforo de decisiones", "Días de enfermedad", "Evaluación sumativa"],
+    },
+  ];
+  return (
+    <div className="fd-pop">
+      <div style={{ textAlign: "center", padding: "30px 12px 10px" }}>
+        <div className="fd-body" style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.28em", color: C.sub, textTransform: "uppercase" }}>
+          Programa de educación en diabetes
+        </div>
+        <h1 className="fd-display" style={{ fontSize: "clamp(30px, 6vw, 46px)", margin: "10px 0 4px", color: C.ink, letterSpacing: "0.06em", fontWeight: 600 }}>
+          CONOCE <em style={{ fontWeight: 500, letterSpacing: 0, color: C.rosa }}>tu</em> DIABETES
+        </h1>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10 }}>
+          {[C.rosa, C.verde, C.menta, C.durazno, C.nude, C.terra].map((c, i) => (
+            <div key={i} style={{ width: 14, height: 14, background: c, borderRadius: "47% 53% 55% 45% / 52% 46% 54% 48%" }} />
+          ))}
+        </div>
+        <p className="fd-body" style={{ maxWidth: 560, margin: "16px auto 0", fontSize: 15.5, lineHeight: 1.65, color: C.ink }}>
+          Un espacio interactivo para aprender, practicar y tomar decisiones informadas sobre tu salud.
+          Selecciona un módulo para comenzar.
+        </p>
+      </div>
+
+      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))", marginTop: 12 }}>
+        {trabajos.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => go(t.id)}
+            style={{
+              textAlign: "left", background: C.card, border: `1px solid ${C.line}`, borderRadius: 24,
+              padding: 24, cursor: "pointer", boxShadow: "0 4px 18px rgba(66,61,58,.05)",
+              display: "flex", flexDirection: "column", gap: 12, transition: "transform .15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <BrushCircle color={t.color} size={78} float>{t.emoji}</BrushCircle>
+              <div>
+                <Pill bg={t.soft}>{t.num}</Pill>
+                <h2 className="fd-display" style={{ margin: "8px 0 0", fontSize: 24, color: C.ink, fontWeight: 700 }}>{t.title}</h2>
+              </div>
+            </div>
+            <p className="fd-body" style={{ margin: 0, fontSize: 14.5, lineHeight: 1.6, color: C.sub }}>{t.desc}</p>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {t.temas.map((tm) => (
+                <span key={tm} className="fd-body" style={{ fontSize: 12, fontWeight: 700, color: C.ink, background: C.bg, border: `1px solid ${C.line}`, borderRadius: 999, padding: "4px 10px" }}>{tm}</span>
+              ))}
+            </div>
+            <div className="fd-body" style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 13, color: t.prog === t.total ? C.verde : C.sub, fontWeight: 800 }}>
+                {t.prog === t.total ? "✓ Completado" : `${t.prog} / ${t.total} actividades`}
+              </span>
+              <span style={{ fontWeight: 800, color: C.ink, fontSize: 14 }}>Entrar →</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <p className="fd-body" style={{ textAlign: "center", fontSize: 12.5, color: C.sub, margin: "26px 8px 8px", lineHeight: 1.6 }}>
+        Programa de educación en diabetes · Hecho en un modelo activo por PromptKilla Studio.<br />
+        Este contenido no sustituye la consulta médica: tus metas y tu plan personal los define tu equipo de salud.
+      </p>
+    </div>
+  );
+}
+
+/* ============================================================
+   TRABAJO 2 · INICIO
+   ============================================================ */
+function Home2({ go, completed, toPortada }) {
+  const acts = [
+    {
+      id: "hipo", emoji: "🍬", color: C.rosa, soft: C.rosaSoft, tag: "Hipoglucemia",
+      title: "La Regla del 15-15",
+      desc: "Reconoce la glucosa baja, practica el algoritmo del 15-15 y aprende a diferenciar hipoglucemia de hiperglucemia.",
+    },
+    {
+      id: "hiper", emoji: "🚦", color: C.terra, soft: C.terraSoft, tag: "Hiperglucemia",
+      title: "Semáforo de decisiones",
+      desc: "Identifica la glucosa alta, sus causas y señales de alarma, y decide qué hacer con el semáforo de decisiones.",
+    },
+    {
+      id: "dias", emoji: "🤒", color: C.verde, soft: C.verdeSoft, tag: "Días de enfermedad",
+      title: "¿Qué hacer en días de enfermedad?",
+      desc: "Cuidados cuando te enfermas: hidratación, monitoreo, tratamiento y cuándo acudir a urgencias. Incluye el juego \u201c¿Qué harías si...?\u201d",
+    },
+    {
+      id: "evalsum", emoji: "📝", color: C.durazno, soft: C.duraznoSoft, tag: "Cierre",
+      title: "Evaluación sumativa",
+      desc: "Cuestionario virtual para demostrar todo lo que aprendiste en esta sesión.",
+    },
+  ];
+  const doneCount = acts.filter((a) => completed[a.id]).length;
+  return (
+    <div className="fd-pop">
+      <div style={{ display: "flex", justifyContent: "flex-start", paddingTop: 14 }}>
+        <button
+          onClick={toPortada}
+          className="fd-body"
+          style={{ border: `2px solid ${C.line}`, background: "#fff", borderRadius: 999, padding: "8px 16px", fontWeight: 800, fontSize: 14, color: C.ink, cursor: "pointer" }}
+        >
+          ← Portada
+        </button>
+      </div>
+      <div style={{ textAlign: "center", padding: "10px 12px 8px" }}>
+        <div className="fd-body" style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.28em", color: C.sub, textTransform: "uppercase" }}>
+          Trabajo 2 · Sesión educativa 3 de 3
+        </div>
+        <h1 className="fd-display" style={{ fontSize: "clamp(26px, 5vw, 38px)", margin: "10px 0 4px", color: C.ink, letterSpacing: "0.04em", fontWeight: 600 }}>
+          RESOLVER <em style={{ fontWeight: 500, letterSpacing: 0, color: C.terra }}>problemas</em>
+        </h1>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 10 }}>
+          {[C.rosa, C.verde, C.menta, C.durazno, C.nude, C.terra].map((c, i) => (
+            <div key={i} style={{ width: 14, height: 14, background: c, borderRadius: "47% 53% 55% 45% / 52% 46% 54% 48%" }} />
+          ))}
+        </div>
+      </div>
+
+      <Card style={{ margin: "18px 0", padding: 24 }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+          <BrushCircle color={C.durazno} size={72} float>🧭</BrushCircle>
+          <div style={{ flex: 1, minWidth: 230 }}>
+            <h2 className="fd-display" style={{ margin: "2px 0 8px", fontSize: 22, color: C.ink, fontWeight: 700 }}>
+              Aprende a actuar a tiempo
+            </h2>
+            <p className="fd-body" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65, color: C.ink }}>
+              En esta sesión desarrollarás habilidades para <b>resolver problemas</b>: identificar los signos de la{" "}
+              <b>hipoglucemia</b> y la <b>hiperglucemia</b>, aplicar las medidas iniciales para manejarlas,
+              cuidarte durante los <b>días de enfermedad</b> y reconocer los <b>signos de alarma</b> que requieren
+              atención médica inmediata.
+            </p>
+            <p className="fd-body" style={{ margin: "10px 0 0", fontSize: 14, color: C.sub }}>
+              Completa las 4 actividades a tu ritmo. 💚
+            </p>
+          </div>
+        </div>
+        {doneCount > 0 && (
+          <div className="fd-body" style={{ marginTop: 14, background: C.verdeSoft, borderRadius: 12, padding: "10px 14px", fontSize: 14, fontWeight: 700, color: C.ink }}>
+            {doneCount === 4 ? "🎉 ¡Completaste toda la sesión! Excelente trabajo." : `Progreso de la sesión: ${doneCount} de 4 actividades completadas`}
+          </div>
+        )}
+      </Card>
+
+      <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+        {acts.map((a, i) => (
+          <button
+            key={a.id}
+            onClick={() => go(a.id)}
+            style={{
+              textAlign: "left", background: C.card, border: `1px solid ${C.line}`,
+              borderRadius: 22, padding: 20, cursor: "pointer",
+              boxShadow: "0 4px 18px rgba(66,61,58,.05)", transition: "transform .15s",
+              display: "flex", flexDirection: "column", gap: 12, position: "relative",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+          >
+            {completed[a.id] && (
+              <div style={{ position: "absolute", top: 14, right: 14, background: C.verde, color: "#fff", borderRadius: 999, width: 28, height: 28, display: "grid", placeItems: "center", fontSize: 15 }}>✓</div>
+            )}
+            <BrushCircle color={a.color} size={78}>{a.emoji}</BrushCircle>
+            <div>
+              <Pill bg={a.soft}>{a.tag}</Pill>
+              <h3 className="fd-display" style={{ margin: "10px 0 6px", fontSize: 20, color: C.ink, fontWeight: 700 }}>
+                Actividad {i + 1} · {a.title}
+              </h3>
+              <p className="fd-body" style={{ margin: 0, fontSize: 14.5, lineHeight: 1.55, color: C.sub }}>{a.desc}</p>
+            </div>
+            <div className="fd-body" style={{ marginTop: "auto", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+              <span style={{ fontWeight: 800, color: C.ink, fontSize: 14 }}>{completed[a.id] ? "Repasar →" : "Comenzar →"}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <p className="fd-body" style={{ textAlign: "center", fontSize: 12.5, color: C.sub, margin: "22px 8px 8px", lineHeight: 1.6 }}>
+        Programa de educación en diabetes · Hecho en un modelo activo por PromptKilla Studio.<br />
+        Este contenido no sustituye la consulta médica: ante una urgencia, contacta a tu equipo de salud o acude a emergencias.
+      </p>
+    </div>
+  );
+}
+
+/* ============================================================
+   T2 · ACTIVIDAD 1 · HIPOGLUCEMIA (REGLA DEL 15-15)
+   ============================================================ */
+function Hipo({ onBack, onComplete }) {
+  const [step, setStep] = useState(0); // 0 intro, 1 regla 15-15, 2 tarjetas hipo/hiper
+
+  // --- Simulador Regla 15-15 ---
+  const readings = [62, 68, 94];
+  const [attempt, setAttempt] = useState(0);
+  const [phase, setPhase] = useState("measure"); // measure -> eat -> wait -> (repeat) -> success
+  const [feedback, setFeedback] = useState(null);
+  const glucose = readings[Math.min(attempt, readings.length - 1)];
+
+  const carbs = [
+    { txt: "½ vaso de jugo de fruta 🧃", ok: true },
+    { txt: "Una barra de chocolate 🍫", ok: false, why: "El chocolate tiene grasa, y la grasa hace que el azúcar suba muy lento. En hipoglucemia necesitas azúcar rápida." },
+    { txt: "3–4 tabletas de glucosa 💊", ok: true },
+    { txt: "Refresco light 🥤", ok: false, why: "Los productos light no tienen azúcar: no subirán tu glucosa." },
+    { txt: "1 cucharada de miel 🍯", ok: true },
+    { txt: "Papas fritas 🍟", ok: false, why: "La grasa y la sal no resuelven la hipoglucemia; necesitas 15 g de carbohidrato de acción rápida." },
+  ];
+
+  const sintomas = [
+    { txt: "Temblor y sudoración fría", ans: "hipo" },
+    { txt: "Mucha sed y boca seca", ans: "hiper" },
+    { txt: "Hambre intensa y repentina", ans: "hipo" },
+    { txt: "Orinar con mucha frecuencia", ans: "hiper" },
+    { txt: "Mareo, confusión o visión borrosa súbita", ans: "hipo" },
+    { txt: "Cansancio que se acumula durante días", ans: "hiper" },
+    { txt: "Palpitaciones y nerviosismo", ans: "hipo" },
+    { txt: "Piel seca y visión borrosa gradual", ans: "hiper" },
+  ];
+  const [cardAns, setCardAns] = useState({});
+  const cardsDone = Object.keys(cardAns).length;
+  const cardsOk = sintomas.filter((s, i) => cardAns[i] === s.ans).length;
+
+  return (
+    <div className="fd-pop">
+      <TopBar title="Actividad 1 · Hipoglucemia y la Regla del 15-15" onBack={onBack} done={step + 1} total={3} color={C.rosa} />
+
+      {step === 0 && (
+        <Card>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <BrushCircle color={C.rosa} size={90} float>🍬</BrushCircle>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <h2 className="fd-display" style={{ margin: "0 0 8px", fontSize: 22, color: C.ink }}>¿Qué es la hipoglucemia?</h2>
+              <p className="fd-body" style={{ fontSize: 15.5, lineHeight: 1.7, color: C.ink, margin: 0 }}>
+                Es cuando la glucosa baja de <b>70 mg/dL</b>. Puede ocurrir por saltarse comidas, por un exceso de
+                medicamento o insulina, por ejercicio intenso sin colación o por consumir alcohol sin alimento.
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", marginTop: 16 }}>
+            <div className="fd-body" style={{ background: C.rosaSoft, borderRadius: 16, padding: 14, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
+              <b>Señales tempranas 👀</b><br />Temblor, sudoración fría, hambre intensa, palpitaciones, nerviosismo.
+            </div>
+            <div className="fd-body" style={{ background: C.duraznoSoft, borderRadius: 16, padding: 14, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
+              <b>Señales avanzadas ⚠️</b><br />Mareo, confusión, dificultad para hablar, visión borrosa, somnolencia.
+            </div>
+            <div className="fd-body" style={{ background: C.terraSoft, borderRadius: 16, padding: 14, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
+              <b>Importante 🚨</b><br />Si hay pérdida de conciencia o no puede tragar, NO dar alimento: es una urgencia, pide ayuda de inmediato.
+            </div>
+          </div>
+          <div style={{ marginTop: 18, textAlign: "right" }}>
+            <BigBtn onClick={() => setStep(1)} bg={C.rosa}>Practicar la Regla del 15-15 →</BigBtn>
+          </div>
+        </Card>
+      )}
+
+      {step === 1 && (
+        <Card>
+          <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>Algoritmo: la Regla del 15-15 🔄</h2>
+          <p className="fd-body" style={{ margin: "0 0 16px", fontSize: 14.5, color: C.sub }}>
+            <b style={{ color: C.ink }}>15 g de carbohidrato rápido → esperar 15 minutos → volver a medir.</b> Se repite hasta que la glucosa sea de 70 mg/dL o más. Vive la situación:
+          </p>
+
+          {/* Lectura del glucómetro */}
+          <div style={{ textAlign: "center", background: C.bg, borderRadius: 18, padding: 18, border: `1px solid ${C.line}` }}>
+            <div className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub, letterSpacing: ".08em" }}>TU GLUCÓMETRO MARCA {attempt > 0 ? `(medición ${attempt + 1})` : ""}</div>
+            <div className="fd-display" style={{ fontSize: 52, fontWeight: 700, color: phase === "success" || glucose >= 70 ? C.verde : C.rosa, lineHeight: 1.1 }}>
+              {glucose} <span style={{ fontSize: 20 }}>mg/dL</span>
+            </div>
+            <div className="fd-body" style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>
+              {glucose < 70 ? "⬇️ Hipoglucemia: hay que actuar" : "✅ ¡Fuera de peligro!"}
+            </div>
+          </div>
+
+          {phase === "measure" && glucose < 70 && (
+            <div style={{ marginTop: 16 }}>
+              <p className="fd-body" style={{ fontWeight: 800, fontSize: 15.5, color: C.ink, margin: "0 0 10px" }}>
+                Paso 1 · Elige qué consumir (necesitas ~15 g de carbohidrato rápido):
+              </p>
+              <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+                {carbs.map((cOp, i) => (
+                  <button
+                    key={i}
+                    className="fd-body"
+                    onClick={() => {
+                      if (cOp.ok) { setFeedback({ ok: true, msg: "¡Buena elección! Es azúcar de acción rápida. Ahora toca esperar." }); setPhase("wait"); }
+                      else setFeedback({ ok: false, msg: cOp.why });
+                    }}
+                    style={{ border: `2px solid ${C.line}`, background: "#fff", borderRadius: 14, padding: "12px 14px", fontSize: 14.5, fontWeight: 700, color: C.ink, cursor: "pointer", textAlign: "left" }}
+                  >
+                    {cOp.txt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {phase === "wait" && (
+            <div style={{ marginTop: 16, textAlign: "center" }}>
+              <p className="fd-body" style={{ fontWeight: 800, fontSize: 15.5, color: C.ink }}>Paso 2 · Espera 15 minutos sin actividad física ⏱</p>
+              <BigBtn onClick={() => { setAttempt((a) => a + 1); setPhase(readings[attempt + 1] >= 70 ? "success" : "measure"); setFeedback(null); }} bg={C.rosa}>
+                Pasaron los 15 min: volver a medir 🩸
+              </BigBtn>
+            </div>
+          )}
+
+          {(phase === "success" || (phase === "measure" && glucose >= 70)) && (
+            <div className="fd-body fd-pop" style={{ marginTop: 16, background: C.verdeSoft, borderRadius: 16, padding: "14px 16px", fontSize: 15, lineHeight: 1.65, color: C.ink }}>
+              <b>🎉 ¡Lo lograste!</b> Tu glucosa volvió a zona segura después de {attempt} ciclo(s) del 15-15.
+              Último paso: si falta más de 1 hora para tu próxima comida, come una <b>colación</b> (por ejemplo,
+              galletas con queso o medio sándwich) para que no vuelva a bajar. Y registra el episodio para comentarlo con tu equipo de salud. 📓
+            </div>
+          )}
+
+          {feedback && phase !== "success" && (
+            <div className="fd-body fd-pop" style={{ marginTop: 12, background: feedback.ok ? C.verdeSoft : C.duraznoSoft, borderRadius: 14, padding: "12px 14px", fontSize: 14, color: C.ink }}>
+              <b>{feedback.ok ? "✅ " : "🤔 "}</b>{feedback.msg}
+            </div>
+          )}
+
+          <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+            <BigBtn onClick={() => { setAttempt(0); setPhase("measure"); setFeedback(null); }} bg="#fff" color={C.ink}>↺ Reiniciar simulación</BigBtn>
+            <BigBtn onClick={() => setStep(2)} bg={C.ink}>Ir a las tarjetas →</BigBtn>
+          </div>
+        </Card>
+      )}
+
+      {step === 2 && (
+        <Card>
+          <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>¿Hipoglucemia o hiperglucemia? 🃏</h2>
+          <p className="fd-body" style={{ margin: "0 0 16px", fontSize: 14.5, color: C.sub }}>
+            Lee cada síntoma y clasifícalo. Pista: la hipoglucemia aparece <b>rápido</b>; la hiperglucemia suele instalarse <b>poco a poco</b>.
+          </p>
+          <div style={{ display: "grid", gap: 12 }}>
+            {sintomas.map((s, i) => {
+              const picked = cardAns[i];
+              const opts = [
+                { id: "hipo", label: "⬇️ Hipoglucemia", color: C.rosa, soft: C.rosaSoft },
+                { id: "hiper", label: "⬆️ Hiperglucemia", color: C.terra, soft: C.terraSoft },
+              ];
+              return (
+                <div key={i} style={{ border: `1px solid ${C.line}`, borderRadius: 16, padding: 14 }}>
+                  <p className="fd-body" style={{ margin: "0 0 10px", fontWeight: 700, fontSize: 15, color: C.ink }}>{i + 1}. {s.txt}</p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {opts.map((o) => {
+                      const isRight = s.ans === o.id;
+                      let bg = "#fff", bd = C.line;
+                      if (picked) {
+                        if (isRight) { bg = C.verdeSoft; bd = C.verde; }
+                        else if (picked === o.id) { bg = C.terraSoft; bd = C.terra; }
+                      }
+                      return (
+                        <button
+                          key={o.id}
+                          disabled={!!picked}
+                          onClick={() => setCardAns((a) => ({ ...a, [i]: o.id }))}
+                          className="fd-body"
+                          style={{ border: `2px solid ${bd}`, background: bg, borderRadius: 999, padding: "8px 14px", fontWeight: 800, fontSize: 13.5, color: C.ink, cursor: picked ? "default" : "pointer" }}
+                        >
+                          {picked && isRight ? "✅ " : ""}{o.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <span className="fd-body" style={{ color: C.sub, fontWeight: 700, fontSize: 14 }}>
+              {cardsDone === sintomas.length ? `Resultado: ${cardsOk} / ${sintomas.length} 🎯` : `Respondidas: ${cardsDone} / ${sintomas.length}`}
+            </span>
+            <BigBtn disabled={cardsDone < sintomas.length} onClick={() => { onComplete(); onBack(); }} bg={C.verde}>Terminar actividad ✓</BigBtn>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   T2 · ACTIVIDAD 2 · HIPERGLUCEMIA (SEMÁFORO DE DECISIONES)
+   ============================================================ */
+function Hiper({ onBack, onComplete }) {
+  const [step, setStep] = useState(0); // 0 intro, 1 semáforo
+  const S = {
+    verde: { label: "🟢 Verde · Continúa", color: C.verde, soft: C.verdeSoft },
+    amarillo: { label: "🟡 Amarillo · Precaución", color: "#E5C15A", soft: "#F8EED2" },
+    rojo: { label: "🔴 Rojo · Atención inmediata", color: C.terra, soft: C.terraSoft },
+  };
+  const escenarios = [
+    { txt: "Tu glucosa antes de comer es de 118 mg/dL y te sientes bien.", ans: "verde", why: "Está dentro de la meta: continúa con tu plan de alimentación, medicamento y monitoreo." },
+    { txt: "Tu glucosa marca 215 mg/dL. No tienes síntomas de alarma.", ans: "amarillo", why: "Está alta: toma agua, revisa qué pudo causarlo (comida, medicamento olvidado, estrés), evita azúcares y vuelve a medir más tarde. Regístralo." },
+    { txt: "Llevas 3 días con glucosa arriba de 250 mg/dL a pesar de seguir tu tratamiento.", ans: "amarillo", why: "Hiperglucemia sostenida: contacta a tu equipo de salud pronto para ajustar el plan. No esperes a que aparezcan síntomas graves." },
+    { txt: "Glucosa de 320 mg/dL con vómito que no cede y mucho sueño.", ans: "rojo", why: "Vómito persistente + somnolencia con glucosa muy alta son signos de alarma: acude a urgencias de inmediato." },
+    { txt: "Glucosa de 280 mg/dL, respiración agitada y aliento con olor a fruta.", ans: "rojo", why: "Puede ser cetoacidosis, una complicación grave. Es una urgencia médica: busca atención inmediata." },
+    { txt: "Hoy amaneciste con 125 mg/dL en ayuno después de cenar ligero y caminar.", ans: "verde", why: "¡En meta! Tus hábitos están funcionando: mantén el plan." },
+  ];
+  const [ans, setAns] = useState({});
+  const done = Object.keys(ans).length;
+  const ok = escenarios.filter((e, i) => ans[i] === e.ans).length;
+
+  return (
+    <div className="fd-pop">
+      <TopBar title="Actividad 2 · Hiperglucemia y semáforo de decisiones" onBack={onBack} done={step + 1} total={2} color={C.terra} />
+
+      {step === 0 && (
+        <Card>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+            <BrushCircle color={C.terra} size={90} float>⬆️</BrushCircle>
+            <div style={{ flex: 1, minWidth: 240 }}>
+              <h2 className="fd-display" style={{ margin: "0 0 8px", fontSize: 22, color: C.ink }}>¿Qué es la hiperglucemia?</h2>
+              <p className="fd-body" style={{ fontSize: 15.5, lineHeight: 1.7, color: C.ink, margin: 0 }}>
+                Es la glucosa <b>elevada de forma sostenida</b> (por arriba de tus metas). Sus causas más comunes:
+                comer más de lo planeado, olvidar el medicamento o la insulina, infecciones, estrés o poca actividad física.
+              </p>
+            </div>
+          </div>
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", marginTop: 16 }}>
+            <div className="fd-body" style={{ background: C.duraznoSoft, borderRadius: 16, padding: 14, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
+              <b>Síntomas frecuentes 👀</b><br />Mucha sed, orinar con frecuencia, cansancio, visión borrosa, boca seca.
+            </div>
+            <div className="fd-body" style={{ background: C.verdeSoft, borderRadius: 16, padding: 14, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
+              <b>Acciones iniciales 💧</b><br />Hidrátate con agua, revisa posibles causas, evita azúcares simples, muévete ligero si tu médico lo permite y monitorea más seguido.
+            </div>
+            <div className="fd-body" style={{ background: C.terraSoft, borderRadius: 16, padding: 14, fontSize: 14, lineHeight: 1.6, color: C.ink }}>
+              <b>Signos de alarma 🚨</b><br />Vómito persistente, respiración rápida, aliento afrutado, dolor abdominal, confusión o somnolencia extrema → urgencias.
+            </div>
+          </div>
+          <div style={{ marginTop: 18, textAlign: "right" }}>
+            <BigBtn onClick={() => setStep(1)} bg={C.terra}>Ir al semáforo de decisiones →</BigBtn>
+          </div>
+        </Card>
+      )}
+
+      {step === 1 && (
+        <Card>
+          <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>Semáforo de decisiones 🚦</h2>
+          <p className="fd-body" style={{ margin: "0 0 14px", fontSize: 14.5, color: C.sub }}>
+            🟢 continúa con tu plan · 🟡 actúa y vigila de cerca · 🔴 busca atención médica inmediata.
+            Lee cada situación y decide el color.
+          </p>
+          <div style={{ display: "grid", gap: 12 }}>
+            {escenarios.map((e, i) => {
+              const picked = ans[i];
+              return (
+                <div key={i} style={{ border: `1px solid ${C.line}`, borderRadius: 16, padding: 14 }}>
+                  <p className="fd-body" style={{ margin: "0 0 10px", fontWeight: 700, fontSize: 15, color: C.ink }}>{i + 1}. {e.txt}</p>
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {Object.entries(S).map(([id, o]) => {
+                      const isRight = e.ans === id;
+                      let bg = "#fff", bd = C.line;
+                      if (picked) {
+                        if (isRight) { bg = C.verdeSoft; bd = C.verde; }
+                        else if (picked === id) { bg = C.terraSoft; bd = C.terra; }
+                      }
+                      return (
+                        <button
+                          key={id}
+                          disabled={!!picked}
+                          onClick={() => setAns((a) => ({ ...a, [i]: id }))}
+                          className="fd-body"
+                          style={{ border: `2px solid ${bd}`, background: bg, borderRadius: 999, padding: "8px 13px", fontWeight: 800, fontSize: 13, color: C.ink, cursor: picked ? "default" : "pointer" }}
+                        >
+                          {picked && isRight ? "✅ " : ""}{o.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {picked && (
+                    <div className="fd-body fd-pop" style={{ marginTop: 10, background: picked === e.ans ? C.verdeSoft : C.duraznoSoft, borderRadius: 12, padding: "10px 12px", fontSize: 13.5, lineHeight: 1.55, color: C.ink }}>
+                      {e.why}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <span className="fd-body" style={{ color: C.sub, fontWeight: 700, fontSize: 14 }}>
+              {done === escenarios.length ? `Resultado: ${ok} / ${escenarios.length} 🎯` : `Respondidas: ${done} / ${escenarios.length}`}
+            </span>
+            <BigBtn disabled={done < escenarios.length} onClick={() => { onComplete(); onBack(); }} bg={C.verde}>Terminar actividad ✓</BigBtn>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   T2 · ACTIVIDAD 3 · DÍAS DE ENFERMEDAD
+   ============================================================ */
+function Dias({ onBack, onComplete }) {
+  const [step, setStep] = useState(0); // 0 infografía, 1 juego
+  const [open, setOpen] = useState(null);
+  const reglas = [
+    { emoji: "💊", t: "No suspendas tu tratamiento", d: "Aunque no comas igual que siempre, no dejes tu medicamento o insulina sin indicación médica: la enfermedad suele SUBIR la glucosa.", color: C.rosa, soft: C.rosaSoft },
+    { emoji: "🩸", t: "Monitorea más seguido", d: "Mide tu glucosa cada 2 a 4 horas mientras estés enfermo y anota los resultados. Así detectas a tiempo si algo se sale de control.", color: C.terra, soft: C.terraSoft },
+    { emoji: "💧", t: "Hidrátate constantemente", d: "Toma agua a sorbos frecuentes (o suero oral si hay vómito o diarrea). La deshidratación empeora la hiperglucemia.", color: C.verde, soft: C.verdeSoft },
+    { emoji: "🍲", t: "No dejes de comer", d: "Si no toleras comida normal, opta por opciones suaves: caldos, gelatina, pan tostado, puré. El cuerpo necesita energía para recuperarse.", color: C.durazno, soft: C.duraznoSoft },
+    { emoji: "📞", t: "Mantén contacto con tu equipo de salud", d: "Avisa si la fiebre dura más de 24-48 h, si no toleras líquidos o si tu glucosa se mantiene muy alta a pesar del tratamiento.", color: C.menta, soft: C.mentaSoft },
+    { emoji: "🚨", t: "Acude a urgencias si...", d: "Vómito o diarrea persistentes, dificultad para respirar, aliento afrutado, confusión, somnolencia extrema o glucosa muy alta que no baja.", color: C.terra, soft: C.terraSoft },
+  ];
+  const juego = [
+    { q: "Amaneces con gripe y sin apetito. ¿Qué haces con tu medicamento para la diabetes?", o: ["Lo suspendo hasta sentirme mejor", "Lo continúo como siempre y consulto a mi médico si tengo dudas", "Tomo doble dosis por si acaso"], c: 1, e: "Enfermarse suele subir la glucosa, por eso el tratamiento continúa. Cualquier ajuste lo indica tu médico, nunca por cuenta propia." },
+    { q: "Tienes vómito y no toleras alimentos sólidos. ¿Qué es lo más importante?", o: ["Dormir todo el día sin tomar nada", "Hidratarte a sorbos pequeños y frecuentes", "Esperar a tener hambre para tomar líquidos"], c: 1, e: "La hidratación es prioridad: sorbos pequeños de agua o suero, aunque no tengas sed. Si no toleras ni líquidos, es momento de buscar atención." },
+    { q: "Estás enfermo y tu glucosa marca 290 mg/dL, con respiración rápida y mucho sueño. ¿Qué haces?", o: ["Espero a mañana a ver cómo sigo", "Hago ejercicio para bajarla", "Busco atención médica de inmediato"], c: 2, e: "Glucosa muy alta + respiración rápida + somnolencia son signos de alarma de una complicación grave: es urgencia." },
+    { q: "¿Cada cuánto conviene medir tu glucosa en días de enfermedad?", o: ["Una vez a la semana", "Cada 2 a 4 horas", "Solo si me siento mal"], c: 1, e: "En días de enfermedad el monitoreo se intensifica: cada 2-4 horas, anotando resultados para compartirlos con tu equipo de salud." },
+  ];
+  const [ok, setOk] = useState(0);
+  const [answered, setAnswered] = useState(0);
+
+  return (
+    <div className="fd-pop">
+      <TopBar title="Actividad 3 · Días de enfermedad" onBack={onBack} done={step + 1} total={2} color={C.verde} />
+
+      {step === 0 && (
+        <Card>
+          <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>¿Qué hacer en días de enfermedad? 🤒</h2>
+          <p className="fd-body" style={{ margin: "0 0 16px", fontSize: 15, lineHeight: 1.65, color: C.ink }}>
+            Una gripe, una infección o cualquier enfermedad puede <b>subir tu glucosa</b>, incluso si comes menos.
+            Toca cada tarjeta de la infografía para conocer las 6 reglas de oro:
+          </p>
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
+            {reglas.map((r, i) => (
+              <button
+                key={i}
+                onClick={() => setOpen(open === i ? null : i)}
+                className="fd-body"
+                style={{ textAlign: "left", background: open === i ? r.soft : "#fff", border: `2px solid ${open === i ? r.color : C.line}`, borderRadius: 18, padding: 16, cursor: "pointer", transition: "all .2s" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <BrushCircle color={r.color} size={44}>{r.emoji}</BrushCircle>
+                  <b style={{ fontSize: 15, color: C.ink }}>{i + 1}. {r.t}</b>
+                </div>
+                {open === i && (
+                  <p className="fd-pop" style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.6, color: C.ink }}>{r.d}</p>
+                )}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginTop: 18, textAlign: "right" }}>
+            <BigBtn onClick={() => setStep(1)} bg={C.verde}>Jugar “¿Qué harías si...?” →</BigBtn>
+          </div>
+        </Card>
+      )}
+
+      {step === 1 && (
+        <Card>
+          <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>Juego: ¿Qué harías si...? 🎲</h2>
+          <p className="fd-body" style={{ margin: "0 0 18px", fontSize: 14.5, color: C.sub }}>Ponte en la situación y elige la mejor decisión.</p>
+          <div style={{ display: "grid", gap: 22 }}>
+            {juego.map((item, i) => (
+              <Quiz key={i} q={`${i + 1}. ${item.q}`} options={item.o} correct={item.c} explain={item.e}
+                onAnswered={(isOk) => { setAnswered((x) => x + 1); isOk && setOk((x) => x + 1); }} />
+            ))}
+          </div>
+          <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <span className="fd-body" style={{ color: C.sub, fontWeight: 700, fontSize: 14 }}>Aciertos: {ok} / {juego.length}</span>
+            <BigBtn disabled={answered < juego.length} onClick={() => { onComplete(); onBack(); }} bg={C.verde}>Terminar actividad ✓</BigBtn>
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   T2 · ACTIVIDAD 4 · EVALUACIÓN SUMATIVA
+   ============================================================ */
+function EvalSumativa({ onBack, onComplete }) {
+  const preguntas = [
+    { q: "1. La hipoglucemia se define como una glucosa por debajo de…", o: ["100 mg/dL", "70 mg/dL", "180 mg/dL"], c: 1, e: "Menos de 70 mg/dL es hipoglucemia y requiere actuar de inmediato." },
+    { q: "2. La Regla del 15-15 consiste en…", o: ["Tomar 15 tragos de agua y caminar 15 minutos", "Consumir 15 g de carbohidrato rápido, esperar 15 minutos y volver a medir", "Comer 15 g de proteína cada 15 minutos"], c: 1, e: "15 g de carbohidrato de acción rápida + 15 minutos de espera + nueva medición, repitiendo hasta llegar a 70 mg/dL o más." },
+    { q: "3. ¿Cuál de estos es un buen ejemplo de carbohidrato rápido para tratar una hipoglucemia?", o: ["Una barra de chocolate", "Medio vaso de jugo o tabletas de glucosa", "Papas fritas"], c: 1, e: "El azúcar 'sin grasa' actúa rápido. La grasa del chocolate o las papas retrasa la absorción." },
+    { q: "4. Temblor, sudoración fría y hambre repentina son señales típicas de…", o: ["Hipoglucemia", "Hiperglucemia", "Presión alta"], c: 0, e: "La hipoglucemia aparece rápido, con temblor, sudor frío, hambre y palpitaciones." },
+    { q: "5. Mucha sed, orinar con frecuencia y cansancio que se acumula sugieren…", o: ["Hipoglucemia", "Hiperglucemia", "Buena hidratación"], c: 1, e: "La hiperglucemia se instala poco a poco: sed excesiva, orina frecuente, fatiga y visión borrosa." },
+    { q: "6. Ante glucosa muy alta con vómito persistente, respiración rápida o aliento afrutado debes…", o: ["Esperar 24 horas a ver si mejora", "Hacer ejercicio intenso", "Acudir a urgencias de inmediato"], c: 2, e: "Son signos de alarma de cetoacidosis u otra complicación aguda: atención médica inmediata." },
+    { q: "7. En días de enfermedad, tu medicamento para la diabetes…", o: ["Se suspende hasta comer normal", "Se continúa, y cualquier ajuste lo indica tu médico", "Se duplica automáticamente"], c: 1, e: "La enfermedad tiende a subir la glucosa: el tratamiento continúa y los ajustes solo los indica tu equipo de salud." },
+    { q: "8. ¿Qué debe incluir tu plan personal de acción?", o: ["Solo el teléfono de urgencias", "Qué hacer ante hipoglucemia, hiperglucemia y días de enfermedad, en un lugar visible", "Únicamente mi lista de medicamentos"], c: 1, e: "Un plan visible con pasos claros para cada situación te permite actuar rápido y sin dudar. ¡Elabóralo y compártelo con tu familia!" },
+  ];
+  const [ok, setOk] = useState(0);
+  const [answered, setAnswered] = useState(0);
+  const total = preguntas.length;
+
+  return (
+    <div className="fd-pop">
+      <TopBar title="Actividad 4 · Evaluación sumativa" onBack={onBack} done={answered >= total ? 1 : 0} total={1} color={C.durazno} />
+      <Card>
+        <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>Cuestionario virtual 📝</h2>
+        <p className="fd-body" style={{ margin: "0 0 18px", fontSize: 14.5, color: C.sub }}>
+          {total} preguntas para demostrar lo aprendido en esta sesión. ¡Confía en ti!
+        </p>
+        <div style={{ display: "grid", gap: 22 }}>
+          {preguntas.map((item, i) => (
+            <Quiz key={i} q={item.q} options={item.o} correct={item.c} explain={item.e}
+              onAnswered={(isOk) => { setAnswered((x) => x + 1); isOk && setOk((x) => x + 1); }} />
+          ))}
+        </div>
+
+        {answered >= total && (
+          <div className="fd-pop" style={{ marginTop: 20, textAlign: "center", background: C.verdeSoft, borderRadius: 18, padding: 20 }}>
+            <div style={{ fontSize: 40 }}>{ok >= 7 ? "🏆" : ok >= 5 ? "🌟" : "💪"}</div>
+            <div className="fd-display" style={{ fontSize: 22, color: C.ink, fontWeight: 700, margin: "6px 0" }}>
+              {ok} de {total} aciertos
+            </div>
+            <p className="fd-body" style={{ margin: 0, fontSize: 15, color: C.ink }}>
+              {ok >= 7
+                ? "¡Excelente! Estás listo para resolver problemas y actuar a tiempo. 💚"
+                : ok >= 5
+                ? "¡Muy buen trabajo! Repasa las actividades para reforzar los puntos que fallaste."
+                : "Cada intento cuenta. Vuelve a las actividades y repite el cuestionario: dominar esto puede marcar la diferencia."}
+            </p>
+            <p className="fd-body" style={{ margin: "10px 0 0", fontSize: 13.5, color: C.sub }}>
+              Recuerda tu compromiso: elabora tu plan personal de acción y colócalo en un lugar visible. 📌
+            </p>
+          </div>
+        )}
+
+        <div style={{ marginTop: 18, textAlign: "right" }}>
+          <BigBtn disabled={answered < total} onClick={() => { onComplete(); onBack(); }} bg={C.verde}>Terminar sesión ✓</BigBtn>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+/* ============================================================
    APP
    ============================================================ */
 export default function App() {
-  const [view, setView] = useState("home");
-  const [completed, setCompleted] = useState({ llave: false, tarjetas: false, velocimetro: false });
-  const complete = (id) => setCompleted((c) => ({ ...c, [id]: true }));
+  const [view, setView] = useState("portada");
+  const [done1, setDone1] = useState({ llave: false, tarjetas: false, velocimetro: false });
+  const [done2, setDone2] = useState({ hipo: false, hiper: false, dias: false, evalsum: false });
+  const complete1 = (id) => setDone1((c) => ({ ...c, [id]: true }));
+  const complete2 = (id) => setDone2((c) => ({ ...c, [id]: true }));
 
   return (
     <div className="fd-body" style={{ minHeight: "100vh", background: C.bg, color: C.ink }}>
       <style>{FONT_CSS}</style>
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "12px 16px 40px" }}>
-        {view === "home" && <Home go={setView} completed={completed} />}
-        {view === "llave" && <Llave onBack={() => setView("home")} onComplete={() => complete("llave")} />}
-        {view === "tarjetas" && <Tarjetas onBack={() => setView("home")} onComplete={() => complete("tarjetas")} />}
-        {view === "velocimetro" && <Velocimetro onBack={() => setView("home")} onComplete={() => complete("velocimetro")} />}
+        {view === "portada" && <Portada go={setView} done1={done1} done2={done2} />}
+
+        {view === "home1" && <Home go={setView} completed={done1} toPortada={() => setView("portada")} />}
+        {view === "llave" && <Llave onBack={() => setView("home1")} onComplete={() => complete1("llave")} />}
+        {view === "tarjetas" && <Tarjetas onBack={() => setView("home1")} onComplete={() => complete1("tarjetas")} />}
+        {view === "velocimetro" && <Velocimetro onBack={() => setView("home1")} onComplete={() => complete1("velocimetro")} />}
+
+        {view === "home2" && <Home2 go={setView} completed={done2} toPortada={() => setView("portada")} />}
+        {view === "hipo" && <Hipo onBack={() => setView("home2")} onComplete={() => complete2("hipo")} />}
+        {view === "hiper" && <Hiper onBack={() => setView("home2")} onComplete={() => complete2("hiper")} />}
+        {view === "dias" && <Dias onBack={() => setView("home2")} onComplete={() => complete2("dias")} />}
+        {view === "evalsum" && <EvalSumativa onBack={() => setView("home2")} onComplete={() => complete2("evalsum")} />}
       </div>
     </div>
   );
