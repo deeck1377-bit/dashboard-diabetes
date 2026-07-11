@@ -251,7 +251,7 @@ function Home({ go, completed, toPortada }) {
     {
       id: "velocimetro", emoji: "🧭", color: C.terra, soft: C.terraSoft,
       title: "Velocímetro glucémico",
-      desc: "Explora las metas de glucosa, resuelve un caso clínico y pon a prueba lo aprendido.",
+      desc: "Aprende a leer el velocímetro, clasifica 5 casos clínicos de glucosa y pon a prueba lo aprendido.",
       tag: "Metas de control",
     },
   ];
@@ -929,7 +929,7 @@ function Tarjetas({ onBack, onComplete }) {
    ACTIVIDAD 3 · VELOCÍMETRO GLUCÉMICO + CASO + EVALUACIÓN
    ============================================================ */
 function Velocimetro({ onBack, onComplete }) {
-  const [step, setStep] = useState(0); // 0 juego velocímetro, 1 caso, 2 evaluación
+  const [step, setStep] = useState(0); // 0 explicación, 1 casos clínicos, 2 evaluación
 
   // --- Zonas del velocímetro (basadas en la lámina) ---
   const zonas = [
@@ -939,16 +939,25 @@ function Velocimetro({ onBack, onComplete }) {
   ];
   const zonaDe = (x) => zonas.find((z) => z.test(x)) || zonas[zonas.length - 1];
 
-  const TOTAL = 5;
-  const randNum = () => Math.floor(Math.random() * (300 - 80 + 1)) + 80;
-  const [valor, setValor] = useState(randNum);
-  const [ronda, setRonda] = useState(1);
+  // --- 5 casos clínicos ---
+  const casos = [
+    { persona: "👵", nombre: "Doña Rosa, 68 años", texto: "Se midió la glucosa en ayuno, antes de desayunar.", valor: 118 },
+    { persona: "👴", nombre: "Don Pedro, 72 años", texto: "Se tomó la glucosa antes de comer, a media mañana.", valor: 160 },
+    { persona: "👩", nombre: "Doña Carmen, 65 años", texto: "Se sintió con mucha sed y se midió la glucosa.", valor: 235 },
+    { persona: "🧓", nombre: "Don Alberto, 70 años", texto: "Se midió en ayuno después de caminar por la mañana.", valor: 105 },
+    { persona: "👵", nombre: "Doña Luz, 74 años", texto: "Se midió 2 horas después de comerse un pan dulce.", valor: 190 },
+  ];
+  const TOTAL = casos.length;
+
+  const [caseIdx, setCaseIdx] = useState(0);
   const [aciertos, setAciertos] = useState(0);
   const [resultado, setResultado] = useState(null); // { ok, elegida }
   const [dragging, setDragging] = useState(false);
   const [overZone, setOverZone] = useState(null);
+  const casosDone = caseIdx >= TOTAL;
+  const casoActual = casos[Math.min(caseIdx, TOTAL - 1)];
+  const valor = casoActual.valor;
   const zonaCorrecta = zonaDe(valor);
-  const juegoDone = ronda > TOTAL;
 
   const soltar = (zonaId) => {
     if (resultado) return;
@@ -957,11 +966,8 @@ function Velocimetro({ onBack, onComplete }) {
     if (ok) setAciertos((a) => a + 1);
     setDragging(false); setOverZone(null);
   };
-  const siguiente = () => {
-    if (ronda >= TOTAL) { setRonda((r) => r + 1); setResultado(null); }
-    else { setRonda((r) => r + 1); setValor(randNum()); setResultado(null); }
-  };
-  const reiniciarJuego = () => { setRonda(1); setAciertos(0); setValor(randNum()); setResultado(null); };
+  const siguienteCaso = () => { setCaseIdx((i) => i + 1); setResultado(null); };
+  const reiniciarCasos = () => { setCaseIdx(0); setAciertos(0); setResultado(null); };
 
   // Geometría del gauge (semicírculo con 3 zonas iguales + aguja)
   const W = 340, H = 200, cx = W / 2, cy = 178, R = 140, r2 = 78;
@@ -970,15 +976,35 @@ function Velocimetro({ onBack, onComplete }) {
     const a = pt(t0, R), b = pt(t1, R), c2 = pt(t1, r2), d = pt(t0, r2);
     return <path key={key} d={`M ${a.x} ${a.y} A ${R} ${R} 0 0 1 ${b.x} ${b.y} L ${c2.x} ${c2.y} A ${r2} ${r2} 0 0 0 ${d.x} ${d.y} Z`} fill={color} />;
   };
-  // mapeo por tramos: cada zona ocupa 1/3 visual, la aguja cae en su zona
   const valorAFrac = (x) => {
     if (x <= 130) return ((x - 80) / (130 - 80)) * (1 / 3);
     if (x <= 180) return 1 / 3 + ((x - 131) / (180 - 131)) * (1 / 3);
     return 2 / 3 + Math.min(1, (x - 181) / (300 - 181)) * (1 / 3);
   };
-  const needle = pt(valorAFrac(valor), r2 + (R - r2) * 0.62);
+  const gaugeZonas = (frac) => (
+    <>
+      {arc(0, 1 / 3, C.verde, "z1")}
+      {arc(1 / 3, 2 / 3, "#E5B94E", "z2")}
+      {arc(2 / 3, 1, C.terra, "z3")}
+      <text x={pt(1 / 6, (R + r2) / 2).x} y={pt(1 / 6, (R + r2) / 2).y} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>META</text>
+      <text x={pt(3 / 6, (R + r2) / 2).x} y={pt(3 / 6, (R + r2) / 2).y - 4} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>PRECAU-</text>
+      <text x={pt(3 / 6, (R + r2) / 2).x} y={pt(3 / 6, (R + r2) / 2).y + 8} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>CIÓN</text>
+      <text x={pt(5 / 6, (R + r2) / 2).x} y={pt(5 / 6, (R + r2) / 2).y} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>ALTA</text>
+      {frac !== null && (
+        <>
+          <line x1={cx} y1={cy} x2={pt(frac, r2 + (R - r2) * 0.62).x} y2={pt(frac, r2 + (R - r2) * 0.62).y} stroke={C.ink} strokeWidth="7" strokeLinecap="round" style={{ transition: "all .5s" }} />
+          <circle cx={cx} cy={cy} r="13" fill={C.ink} />
+        </>
+      )}
+    </>
+  );
 
-  const [caseOk, setCaseOk] = useState(0);
+  const panelesRef = [
+    { e: "🌅", t: "Ayuno", meta: "80 – 130 mg/dL", d: "antes de desayunar" },
+    { e: "🍽️", t: "Después de comer", meta: "menos de 180 mg/dL", d: "2 horas después" },
+    { e: "🩸", t: "HbA1c", meta: "menos de 7 %", d: "promedio de 3 meses" },
+  ];
+
   const [evalOk, setEvalOk] = useState(0);
   const [evalAnswered, setEvalAnswered] = useState(0);
 
@@ -986,19 +1012,88 @@ function Velocimetro({ onBack, onComplete }) {
     <div className="fd-pop">
       <TopBar title="Actividad 3 · Velocímetro glucémico" onBack={onBack} done={step + 1} total={3} color={C.terra} />
 
+      {/* ---------- PASO 0 · EXPLICACIÓN DEL VELOCÍMETRO ---------- */}
       {step === 0 && (
         <Card>
-          {!juegoDone ? (
-            <>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
-                <h2 className="fd-display" style={{ margin: 0, fontSize: 22, color: C.ink }}>¿Baja, media o alta? 🧭</h2>
-                <span className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub }}>Ronda {ronda} de {TOTAL} · Aciertos: {aciertos}</span>
+          <h2 className="fd-display" style={{ margin: "0 0 8px", fontSize: 23, color: C.ink }}>El velocímetro glucémico 🧭</h2>
+          <p className="fd-body" style={{ margin: "0 0 14px", fontSize: 16, lineHeight: 1.6, color: C.ink }}>
+            Es como el velocímetro de un carro 🚗, pero para tu <b>azúcar en la sangre</b>. Te dice si tu glucosa
+            está en <b>buen nivel</b>, si hay que tener <b>precaución</b> o si está <b>alta</b>. Estos son sus tres colores:
+          </p>
+
+          {/* Gauge de demostración con aguja en META */}
+          <div style={{ textAlign: "center", marginBottom: 8 }}>
+            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 380 }} role="img" aria-label="Velocímetro glucémico de ejemplo">
+              {gaugeZonas(valorAFrac(110))}
+            </svg>
+          </div>
+
+          {/* Explicación de las 3 zonas */}
+          <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+            {zonas.map((z) => (
+              <div key={z.id} style={{ background: z.soft, border: `2px solid ${z.color}`, borderRadius: 16, padding: "14px 12px", textAlign: "center" }}>
+                <div style={{ width: 24, height: 24, borderRadius: "50%", background: z.color, margin: "0 auto 6px" }} />
+                <div className="fd-body" style={{ fontSize: 15.5, fontWeight: 900, color: C.ink }}>{z.label}</div>
+                <div className="fd-body" style={{ fontSize: 13.5, fontWeight: 800, color: C.ink, marginTop: 2 }}>{z.rango}</div>
+                <div className="fd-body" style={{ fontSize: 13, color: C.sub, marginTop: 4 }}>{z.nivel}</div>
               </div>
-              <p className="fd-body" style={{ margin: "0 0 14px", fontSize: 16, lineHeight: 1.55, color: C.ink }}>
-                Observa el valor de glucosa y <b>arrástralo</b> 👆 a la zona del color que le corresponde.
+            ))}
+          </div>
+
+          {/* Paneles pequeños de referencia */}
+          <div style={{ marginTop: 18 }}>
+            <div className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub, letterSpacing: ".05em", margin: "0 2px 8px" }}>METAS DE REFERENCIA</div>
+            <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+              {panelesRef.map((p) => (
+                <div key={p.t} style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 14px" }}>
+                  <div className="fd-body" style={{ fontSize: 15, fontWeight: 800, color: C.ink }}>{p.e} {p.t}</div>
+                  <div className="fd-body" style={{ fontSize: 13, color: C.sub }}>{p.d}</div>
+                  <div className="fd-body" style={{ fontSize: 14, fontWeight: 800, color: C.verde, marginTop: 4 }}>Meta: {p.meta}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="fd-body" style={{ fontSize: 12.5, color: C.sub, margin: "14px 0 0", lineHeight: 1.5 }}>
+            * Metas generales para adultos (ADA). Tu médico puede definir metas personalizadas para ti.
+          </p>
+
+          <div style={{ marginTop: 18, textAlign: "right" }}>
+            <BigBtn onClick={() => setStep(1)} bg={C.terra}>Entendido, ¡a los casos! →</BigBtn>
+          </div>
+        </Card>
+      )}
+
+      {/* ---------- PASO 1 · 5 CASOS CLÍNICOS (ARRASTRAR) ---------- */}
+      {step === 1 && (
+        <Card>
+          {!casosDone ? (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                <h2 className="fd-display" style={{ margin: 0, fontSize: 22, color: C.ink }}>Casos clínicos 🩺</h2>
+                <span className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub }}>Caso {caseIdx + 1} de {TOTAL} · Aciertos: {aciertos}</span>
+              </div>
+              {/* barra de progreso */}
+              <div style={{ display: "flex", gap: 5, marginBottom: 16 }}>
+                {casos.map((_, i) => (
+                  <div key={i} style={{ height: 6, flex: 1, borderRadius: 999, background: i < caseIdx ? C.verde : i === caseIdx ? C.terra : C.line, transition: "background .3s" }} />
+                ))}
+              </div>
+
+              {/* Tarjeta del caso */}
+              <div style={{ display: "flex", gap: 14, alignItems: "center", background: C.nude, borderRadius: 16, padding: "14px 16px", marginBottom: 14 }}>
+                <div style={{ fontSize: 46, lineHeight: 1 }}>{casoActual.persona}</div>
+                <div>
+                  <div className="fd-body" style={{ fontSize: 16, fontWeight: 900, color: C.ink }}>{casoActual.nombre}</div>
+                  <div className="fd-body" style={{ fontSize: 15, color: C.ink, lineHeight: 1.5 }}>{casoActual.texto}</div>
+                </div>
+              </div>
+
+              <p className="fd-body" style={{ margin: "0 0 10px", fontSize: 16, fontWeight: 700, color: C.ink, textAlign: "center" }}>
+                <b>Arrastra</b> 👆 el valor a la zona que le corresponde:
               </p>
 
-              {/* Número aleatorio arrastrable */}
+              {/* Número arrastrable */}
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
                 {!resultado ? (
                   <div
@@ -1013,40 +1108,26 @@ function Velocimetro({ onBack, onComplete }) {
                       opacity: dragging ? 0.5 : 1,
                     }}
                   >
-                    <div style={{ fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em" }}>⠿ TU GLUCOSA</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em" }}>⠿ SU GLUCOSA</div>
                     <div className="fd-display" style={{ fontSize: 44, fontWeight: 700, color: C.ink, lineHeight: 1.1 }}>{valor}</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: C.sub }}>mg/dL</div>
                   </div>
                 ) : (
                   <div className="fd-body fd-pop" style={{ background: resultado.ok ? C.verdeSoft : C.terraSoft, border: `3px solid ${resultado.ok ? C.verde : C.terra}`, borderRadius: 18, padding: "14px 22px", textAlign: "center" }}>
                     <div className="fd-display" style={{ fontSize: 34, fontWeight: 700, color: C.ink }}>{valor} <span style={{ fontSize: 16 }}>mg/dL</span></div>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: zonaCorrecta.color }}>{resultado.ok ? "¡Correcto!" : "Zona correcta:"} {zonaCorrecta.label}</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: zonaCorrecta.color }}>{zonaCorrecta.label}</div>
                   </div>
                 )}
               </div>
 
-              {/* Velocímetro (gauge visual + aguja al soltar) */}
+              {/* Velocímetro (aguja al soltar) */}
               <div style={{ textAlign: "center" }}>
-                <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 380 }} role="img" aria-label="Velocímetro glucémico con tres zonas">
-                  {arc(0, 1 / 3, C.verde, "z1")}
-                  {arc(1 / 3, 2 / 3, "#E5B94E", "z2")}
-                  {arc(2 / 3, 1, C.terra, "z3")}
-                  {/* etiquetas de zona */}
-                  <text x={pt(1 / 6, (R + r2) / 2).x} y={pt(1 / 6, (R + r2) / 2).y} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>META</text>
-                  <text x={pt(3 / 6, (R + r2) / 2).x} y={pt(3 / 6, (R + r2) / 2).y - 4} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>PRECAU-</text>
-                  <text x={pt(3 / 6, (R + r2) / 2).x} y={pt(3 / 6, (R + r2) / 2).y + 8} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>CIÓN</text>
-                  <text x={pt(5 / 6, (R + r2) / 2).x} y={pt(5 / 6, (R + r2) / 2).y} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>ALTA</text>
-                  {/* aguja: solo aparece tras soltar */}
-                  {resultado && (
-                    <>
-                      <line x1={cx} y1={cy} x2={needle.x} y2={needle.y} stroke={C.ink} strokeWidth="7" strokeLinecap="round" style={{ transition: "all .5s" }} />
-                      <circle cx={cx} cy={cy} r="13" fill={C.ink} />
-                    </>
-                  )}
+                <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 360 }} role="img" aria-label="Velocímetro glucémico">
+                  {gaugeZonas(resultado ? valorAFrac(valor) : null)}
                 </svg>
               </div>
 
-              {/* Zonas para soltar (grandes) */}
+              {/* Zonas para soltar */}
               <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 8 }}>
                 {zonas.map((z) => {
                   const isOver = overZone === z.id;
@@ -1060,7 +1141,7 @@ function Velocimetro({ onBack, onComplete }) {
                       onDrop={(e) => { e.preventDefault(); if (dragging) soltar(z.id); }}
                       className="fd-body"
                       style={{
-                        border: `3px ${isOver ? "solid" : "solid"} ${z.color}`,
+                        border: `3px solid ${z.color}`,
                         background: isOver ? z.color : isCorrectReveal ? z.soft : "#fff",
                         borderRadius: 16, padding: "14px 12px", textAlign: "center",
                         transform: isOver ? "scale(1.03)" : "none", transition: "all .15s",
@@ -1083,94 +1164,31 @@ function Velocimetro({ onBack, onComplete }) {
                 <div className="fd-body fd-pop" style={{ marginTop: 14, background: zonaCorrecta.soft, border: `2px solid ${zonaCorrecta.color}`, borderRadius: 16, padding: "13px 16px" }}>
                   <div style={{ fontSize: 15.5, fontWeight: 800, color: C.ink }}>
                     {resultado.ok ? "¡Muy bien! 🎉 " : "Con cuidado 🤔 "}
-                    Una glucosa de <b>{valor} mg/dL</b> está en <b>{zonaCorrecta.label}</b>: {zonaCorrecta.nivel}
+                    La glucosa de {casoActual.nombre.split(",")[0]} ({valor} mg/dL) está en <b>{zonaCorrecta.label}</b>: {zonaCorrecta.nivel}
                   </div>
                   <div style={{ textAlign: "right", marginTop: 12 }}>
-                    <BigBtn onClick={siguiente} bg={C.terra}>{ronda >= TOTAL ? "Ver resultado →" : "Siguiente número →"}</BigBtn>
+                    <BigBtn onClick={siguienteCaso} bg={C.terra}>{caseIdx >= TOTAL - 1 ? "Ver resultado →" : "Siguiente caso →"}</BigBtn>
                   </div>
                 </div>
               )}
-
-              {/* Paneles pequeños de referencia: Ayuno / Después de comer / HbA1c */}
-              <div style={{ marginTop: 18 }}>
-                <div className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub, letterSpacing: ".05em", margin: "0 2px 8px" }}>METAS DE REFERENCIA</div>
-                <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
-                  {[
-                    { e: "🌅", t: "Ayuno", meta: "80 – 130 mg/dL", d: "antes de desayunar" },
-                    { e: "🍽️", t: "Después de comer", meta: "menos de 180 mg/dL", d: "2 horas después" },
-                    { e: "🩸", t: "HbA1c", meta: "menos de 7 %", d: "promedio de 3 meses" },
-                  ].map((p) => (
-                    <div key={p.t} style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 14px" }}>
-                      <div className="fd-body" style={{ fontSize: 15, fontWeight: 800, color: C.ink }}>{p.e} {p.t}</div>
-                      <div className="fd-body" style={{ fontSize: 13, color: C.sub }}>{p.d}</div>
-                      <div className="fd-body" style={{ fontSize: 14, fontWeight: 800, color: C.verde, marginTop: 4 }}>Meta: {p.meta}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <p className="fd-body" style={{ fontSize: 12.5, color: C.sub, margin: "14px 0 0", lineHeight: 1.5 }}>
-                * Metas generales para adultos (ADA). Tu médico puede definir metas personalizadas para ti.
-              </p>
             </>
           ) : (
             <div className="fd-pop" style={{ textAlign: "center", padding: 10 }}>
               <div style={{ fontSize: 46 }}>{aciertos >= 4 ? "🏆" : aciertos >= 3 ? "🌟" : "💪"}</div>
-              <div className="fd-display" style={{ fontSize: 24, color: C.ink, fontWeight: 700, margin: "6px 0" }}>{aciertos} de {TOTAL} aciertos</div>
+              <div className="fd-display" style={{ fontSize: 24, color: C.ink, fontWeight: 700, margin: "6px 0" }}>{aciertos} de {TOTAL} casos correctos</div>
               <p className="fd-body" style={{ margin: "0 auto 16px", maxWidth: 460, fontSize: 15.5, color: C.ink, lineHeight: 1.6 }}>
                 {aciertos >= 4
-                  ? "¡Excelente! Ya distingues cuándo la glucosa está en meta, en precaución o alta. 💚"
+                  ? "¡Excelente! Ya sabes leer el velocímetro y clasificar la glucosa de tus pacientes. 💚"
                   : aciertos >= 3
-                  ? "¡Buen trabajo! Repite el juego para afinar aún más el ojo."
+                  ? "¡Buen trabajo! Repite los casos para afinar aún más el ojo."
                   : "Vamos aprendiendo. Recuerda: hasta 130 es meta, 131–180 precaución y más de 180 está alta."}
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <BigBtn onClick={reiniciarJuego} bg="#fff" color={C.ink}>↺ Jugar de nuevo</BigBtn>
-                <BigBtn onClick={() => setStep(1)} bg={C.terra}>Ir al caso clínico →</BigBtn>
+                <BigBtn onClick={reiniciarCasos} bg="#fff" color={C.ink}>↺ Repetir casos</BigBtn>
+                <BigBtn onClick={() => setStep(2)} bg={C.terra}>Ir a la mini evaluación →</BigBtn>
               </div>
             </div>
           )}
-        </Card>
-      )}
-
-      {step === 1 && (
-        <Card>
-          <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
-            <BrushCircle color={C.durazno} size={64}>👩</BrushCircle>
-            <h2 className="fd-display" style={{ margin: 0, fontSize: 22, color: C.ink }}>Caso clínico: María</h2>
-          </div>
-          <p className="fd-body" style={{ fontSize: 15.5, lineHeight: 1.7, color: C.ink, background: C.nude, borderRadius: 16, padding: "14px 16px", margin: "0 0 20px" }}>
-            María tiene 52 años y vive con <b>diabetes tipo 2</b>. Hoy comenzó su automonitoreo:
-            en ayuno su glucómetro marcó <b>180 mg/dL</b>. Dos horas después del desayuno se midió otra vez:
-            <b> 165 mg/dL</b>. En su último laboratorio, su <b>HbA1c salió en 8.5%</b>. Ayúdala a interpretar sus números. 💪
-          </p>
-          <div style={{ display: "grid", gap: 22 }}>
-            <Quiz
-              q="1. Su glucosa en ayuno fue de 180 mg/dL. ¿Cómo está ese valor?"
-              options={["Dentro de la meta (80–130 mg/dL)", "Por arriba de la meta", "Es hipoglucemia"]}
-              correct={1}
-              explain="La meta general en ayuno es 80–130 mg/dL, así que 180 está por arriba. Detectarlo es justo el poder del automonitoreo."
-              onAnswered={(ok) => ok && setCaseOk((x) => x + 1)}
-            />
-            <Quiz
-              q="2. Dos horas después de desayunar marcó 165 mg/dL. ¿Ese valor…?"
-              options={["Está fuera de la meta posprandial", "Está dentro de la meta posprandial (menos de 180 mg/dL)", "Es un error del glucómetro"]}
-              correct={1}
-              explain="La meta general posprandial es menos de 180 mg/dL a las 2 horas, así que 165 sí está en meta. 🎉"
-              onAnswered={(ok) => ok && setCaseOk((x) => x + 1)}
-            />
-            <Quiz
-              q="3. Su HbA1c fue de 8.5%. ¿Qué significa este estudio?"
-              options={["Su glucosa de ese momento exacto", "El promedio de su glucosa de los últimos 3 meses, y está arriba de la meta (<7%)", "Su nivel de insulina en sangre"]}
-              correct={1}
-              explain="La HbA1c es como la 'película' de 3 meses (el glucómetro es la 'foto' del momento). 8.5% indica que el plan de María necesita ajustes con su médico."
-              onAnswered={(ok) => ok && setCaseOk((x) => x + 1)}
-            />
-          </div>
-          <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <span className="fd-body" style={{ color: C.sub, fontWeight: 700, fontSize: 14 }}>Aciertos: {caseOk} / 3</span>
-            <BigBtn onClick={() => setStep(2)} bg={C.terra}>Ir a la mini evaluación →</BigBtn>
-          </div>
         </Card>
       )}
 
