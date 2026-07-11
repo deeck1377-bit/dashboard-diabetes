@@ -929,58 +929,54 @@ function Tarjetas({ onBack, onComplete }) {
    ACTIVIDAD 3 · VELOCÍMETRO GLUCÉMICO + CASO + EVALUACIÓN
    ============================================================ */
 function Velocimetro({ onBack, onComplete }) {
-  const [step, setStep] = useState(0); // 0 velocímetro, 1 caso, 2 evaluación
-  const metrics = {
-    ayuno: {
-      label: "Glucosa en ayuno", unit: "mg/dL", min: 40, max: 300, start: 100,
-      zones: [
-        { to: 70, label: "Baja (hipoglucemia)", color: C.rosa, msg: "⚠️ Por debajo de 70 mg/dL es hipoglucemia: requiere actuar rápido según lo indicado por tu equipo de salud." },
-        { to: 130, label: "En meta", color: C.verde, msg: "💚 ¡En meta! La meta general en ayuno es de 80 a 130 mg/dL." },
-        { to: 180, label: "Precaución", color: C.durazno, msg: "🟠 Por arriba de la meta. Vale la pena revisar alimentación, medicamento y comentarlo en consulta." },
-        { to: 300, label: "Alta", color: C.terra, msg: "🔴 Glucosa alta. El automonitoreo te ayuda a detectarlo a tiempo y ajustar el plan con tu médico." },
-      ],
-    },
-    post: {
-      label: "Glucosa posprandial (2 h después de comer)", unit: "mg/dL", min: 40, max: 350, start: 140,
-      zones: [
-        { to: 70, label: "Baja (hipoglucemia)", color: C.rosa, msg: "⚠️ Menos de 70 mg/dL es hipoglucemia, incluso después de comer." },
-        { to: 180, label: "En meta", color: C.verde, msg: "💚 ¡En meta! La meta general 2 horas después de comer es menos de 180 mg/dL." },
-        { to: 250, label: "Precaución", color: C.durazno, msg: "🟠 Por arriba de la meta posprandial. Observa qué comiste: las porciones y el tipo de alimento influyen mucho." },
-        { to: 350, label: "Alta", color: C.terra, msg: "🔴 Muy por arriba de la meta. Regístralo y coméntalo con tu equipo de salud." },
-      ],
-    },
-    hba1c: {
-      label: "Hemoglobina glucosilada (HbA1c)", unit: "%", min: 4, max: 14, start: 6.5, stepSize: 0.1,
-      zones: [
-        { to: 7, label: "En meta", color: C.verde, msg: "💚 ¡En meta! La meta general de HbA1c es menos de 7%. Refleja tu promedio de glucosa de los últimos 3 meses." },
-        { to: 8, label: "Precaución", color: C.durazno, msg: "🟠 Ligeramente arriba de la meta general. Pequeños cambios sostenidos hacen gran diferencia." },
-        { to: 14, label: "Alta", color: C.terra, msg: "🔴 Por arriba de la meta: es momento de revisar el plan de tratamiento junto con tu médico." },
-      ],
-    },
-  };
-  const [metric, setMetric] = useState("ayuno");
-  const [values, setValues] = useState({ ayuno: 100, post: 140, hba1c: 6.5 });
-  const m = metrics[metric];
-  const v = values[metric];
-  const zone = m.zones.find((z) => v < z.to) || m.zones[m.zones.length - 1];
+  const [step, setStep] = useState(0); // 0 juego velocímetro, 1 caso, 2 evaluación
 
-  // geometría del gauge
-  const W = 320, H = 190, cx = W / 2, cy = 165, R = 130, r2 = 96;
-  const pt = (t, rad) => ({ x: cx + rad * Math.cos(Math.PI * (1 - t)), y: cy - rad * Math.sin(Math.PI * (1 - t)) });
-  const frac = (val) => (val - m.min) / (m.max - m.min);
-  const arc = (t0, t1, color) => {
-    const a = pt(t0, R), b = pt(t1, R), c2 = pt(t1, r2), d = pt(t0, r2);
-    return (
-      <path
-        key={t0}
-        d={`M ${a.x} ${a.y} A ${R} ${R} 0 0 1 ${b.x} ${b.y} L ${c2.x} ${c2.y} A ${r2} ${r2} 0 0 0 ${d.x} ${d.y} Z`}
-        fill={color}
-      />
-    );
+  // --- Zonas del velocímetro (basadas en la lámina) ---
+  const zonas = [
+    { id: "meta", label: "META", rango: "80 – 130 mg/dL", nivel: "Glucosa en buen nivel 💚", color: C.verde, soft: C.verdeSoft, test: (x) => x <= 130 },
+    { id: "prec", label: "PRECAUCIÓN", rango: "131 – 180 mg/dL", nivel: "Glucosa media, hay que vigilar 🟡", color: "#E5B94E", soft: "#F8EED2", test: (x) => x >= 131 && x <= 180 },
+    { id: "fuera", label: "FUERA DE META", rango: "más de 180 mg/dL", nivel: "Glucosa alta 🔴", color: C.terra, soft: C.terraSoft, test: (x) => x > 180 },
+  ];
+  const zonaDe = (x) => zonas.find((z) => z.test(x)) || zonas[zonas.length - 1];
+
+  const TOTAL = 5;
+  const randNum = () => Math.floor(Math.random() * (300 - 80 + 1)) + 80;
+  const [valor, setValor] = useState(randNum);
+  const [ronda, setRonda] = useState(1);
+  const [aciertos, setAciertos] = useState(0);
+  const [resultado, setResultado] = useState(null); // { ok, elegida }
+  const [dragging, setDragging] = useState(false);
+  const [overZone, setOverZone] = useState(null);
+  const zonaCorrecta = zonaDe(valor);
+  const juegoDone = ronda > TOTAL;
+
+  const soltar = (zonaId) => {
+    if (resultado) return;
+    const ok = zonaId === zonaCorrecta.id;
+    setResultado({ ok, elegida: zonaId });
+    if (ok) setAciertos((a) => a + 1);
+    setDragging(false); setOverZone(null);
   };
-  let prev = 0;
-  const zoneArcs = m.zones.map((z) => { const t1 = frac(z.to); const el = arc(prev, Math.min(t1, 1), z.color); prev = t1; return el; });
-  const needle = pt(Math.max(0, Math.min(1, frac(v))), r2 - 12);
+  const siguiente = () => {
+    if (ronda >= TOTAL) { setRonda((r) => r + 1); setResultado(null); }
+    else { setRonda((r) => r + 1); setValor(randNum()); setResultado(null); }
+  };
+  const reiniciarJuego = () => { setRonda(1); setAciertos(0); setValor(randNum()); setResultado(null); };
+
+  // Geometría del gauge (semicírculo con 3 zonas iguales + aguja)
+  const W = 340, H = 200, cx = W / 2, cy = 178, R = 140, r2 = 78;
+  const pt = (t, rad) => ({ x: cx + rad * Math.cos(Math.PI * (1 - t)), y: cy - rad * Math.sin(Math.PI * (1 - t)) });
+  const arc = (t0, t1, color, key) => {
+    const a = pt(t0, R), b = pt(t1, R), c2 = pt(t1, r2), d = pt(t0, r2);
+    return <path key={key} d={`M ${a.x} ${a.y} A ${R} ${R} 0 0 1 ${b.x} ${b.y} L ${c2.x} ${c2.y} A ${r2} ${r2} 0 0 0 ${d.x} ${d.y} Z`} fill={color} />;
+  };
+  // mapeo por tramos: cada zona ocupa 1/3 visual, la aguja cae en su zona
+  const valorAFrac = (x) => {
+    if (x <= 130) return ((x - 80) / (130 - 80)) * (1 / 3);
+    if (x <= 180) return 1 / 3 + ((x - 131) / (180 - 131)) * (1 / 3);
+    return 2 / 3 + Math.min(1, (x - 181) / (300 - 181)) * (1 / 3);
+  };
+  const needle = pt(valorAFrac(valor), r2 + (R - r2) * 0.62);
 
   const [caseOk, setCaseOk] = useState(0);
   const [evalOk, setEvalOk] = useState(0);
@@ -992,67 +988,148 @@ function Velocimetro({ onBack, onComplete }) {
 
       {step === 0 && (
         <Card>
-          <p className="fd-body" style={{ margin: "0 0 14px", fontSize: 15.5, lineHeight: 1.65, color: C.ink }}>
-            Conocer tus <b>metas de control</b> es como conocer los límites de velocidad del camino 🚗.
-            Elige una medición y <b>mueve el control deslizante</b> para descubrir en qué zona cae cada valor.
-          </p>
+          {!juegoDone ? (
+            <>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+                <h2 className="fd-display" style={{ margin: 0, fontSize: 22, color: C.ink }}>¿Baja, media o alta? 🧭</h2>
+                <span className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub }}>Ronda {ronda} de {TOTAL} · Aciertos: {aciertos}</span>
+              </div>
+              <p className="fd-body" style={{ margin: "0 0 14px", fontSize: 16, lineHeight: 1.55, color: C.ink }}>
+                Observa el valor de glucosa y <b>arrástralo</b> 👆 a la zona del color que le corresponde.
+              </p>
 
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-            {Object.entries(metrics).map(([id, mm]) => (
-              <button
-                key={id}
-                onClick={() => setMetric(id)}
-                className="fd-body"
-                style={{
-                  border: `2px solid ${metric === id ? C.terra : C.line}`,
-                  background: metric === id ? C.terraSoft : "#fff",
-                  borderRadius: 999, padding: "9px 14px", fontWeight: 800, fontSize: 13, color: C.ink, cursor: "pointer",
-                }}
-              >
-                {id === "ayuno" ? "🌅 Ayuno" : id === "post" ? "🍽️ Después de comer" : "🩸 HbA1c"}
-              </button>
-            ))}
-          </div>
+              {/* Número aleatorio arrastrable */}
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+                {!resultado ? (
+                  <div
+                    draggable
+                    onDragStart={() => setDragging(true)}
+                    onDragEnd={() => { setDragging(false); setOverZone(null); }}
+                    className="fd-body"
+                    style={{
+                      background: "#fff", border: `3px solid ${C.ink}`, borderRadius: 18,
+                      padding: "16px 26px", textAlign: "center", cursor: "grab", userSelect: "none",
+                      boxShadow: dragging ? "0 8px 20px rgba(66,61,58,.25)" : "0 3px 10px rgba(66,61,58,.12)",
+                      opacity: dragging ? 0.5 : 1,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em" }}>⠿ TU GLUCOSA</div>
+                    <div className="fd-display" style={{ fontSize: 44, fontWeight: 700, color: C.ink, lineHeight: 1.1 }}>{valor}</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: C.sub }}>mg/dL</div>
+                  </div>
+                ) : (
+                  <div className="fd-body fd-pop" style={{ background: resultado.ok ? C.verdeSoft : C.terraSoft, border: `3px solid ${resultado.ok ? C.verde : C.terra}`, borderRadius: 18, padding: "14px 22px", textAlign: "center" }}>
+                    <div className="fd-display" style={{ fontSize: 34, fontWeight: 700, color: C.ink }}>{valor} <span style={{ fontSize: 16 }}>mg/dL</span></div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: zonaCorrecta.color }}>{resultado.ok ? "¡Correcto!" : "Zona correcta:"} {zonaCorrecta.label}</div>
+                  </div>
+                )}
+              </div>
 
-          <div style={{ textAlign: "center" }}>
-            <div className="fd-body" style={{ fontWeight: 800, fontSize: 15, color: C.ink, marginBottom: 4 }}>{m.label}</div>
-            <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 380 }} role="img" aria-label={`Velocímetro: ${v} ${m.unit}, zona ${zone.label}`}>
-              {zoneArcs}
-              <line x1={cx} y1={cy} x2={needle.x} y2={needle.y} stroke={C.ink} strokeWidth="6" strokeLinecap="round" style={{ transition: "all .3s" }} />
-              <circle cx={cx} cy={cy} r="12" fill={C.ink} />
-              <text x={cx} y={cy - 34} textAnchor="middle" className="fd-display" style={{ fontSize: 30, fontWeight: 700, fill: C.ink }}>
-                {metric === "hba1c" ? v.toFixed(1) : v}
-              </text>
-              <text x={cx} y={cy - 14} textAnchor="middle" className="fd-body" style={{ fontSize: 13, fontWeight: 700, fill: C.sub }}>{m.unit}</text>
-            </svg>
-            <input
-              type="range" className="fd-range"
-              min={m.min} max={m.max} step={m.stepSize || 1} value={v}
-              onChange={(e) => setValues((s) => ({ ...s, [metric]: parseFloat(e.target.value) }))}
-              style={{ background: `linear-gradient(90deg, ${m.zones.map((z) => z.color).join(",")})`, marginTop: 4 }}
-              aria-label={m.label}
-            />
-          </div>
+              {/* Velocímetro (gauge visual + aguja al soltar) */}
+              <div style={{ textAlign: "center" }}>
+                <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: 380 }} role="img" aria-label="Velocímetro glucémico con tres zonas">
+                  {arc(0, 1 / 3, C.verde, "z1")}
+                  {arc(1 / 3, 2 / 3, "#E5B94E", "z2")}
+                  {arc(2 / 3, 1, C.terra, "z3")}
+                  {/* etiquetas de zona */}
+                  <text x={pt(1 / 6, (R + r2) / 2).x} y={pt(1 / 6, (R + r2) / 2).y} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>META</text>
+                  <text x={pt(3 / 6, (R + r2) / 2).x} y={pt(3 / 6, (R + r2) / 2).y - 4} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>PRECAU-</text>
+                  <text x={pt(3 / 6, (R + r2) / 2).x} y={pt(3 / 6, (R + r2) / 2).y + 8} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>CIÓN</text>
+                  <text x={pt(5 / 6, (R + r2) / 2).x} y={pt(5 / 6, (R + r2) / 2).y} textAnchor="middle" className="fd-body" style={{ fontSize: 11, fontWeight: 900, fill: "#fff" }}>ALTA</text>
+                  {/* aguja: solo aparece tras soltar */}
+                  {resultado && (
+                    <>
+                      <line x1={cx} y1={cy} x2={needle.x} y2={needle.y} stroke={C.ink} strokeWidth="7" strokeLinecap="round" style={{ transition: "all .5s" }} />
+                      <circle cx={cx} cy={cy} r="13" fill={C.ink} />
+                    </>
+                  )}
+                </svg>
+              </div>
 
-          <div className="fd-body fd-pop" key={zone.label + metric} style={{ marginTop: 14, borderRadius: 16, padding: "13px 16px", fontSize: 15, lineHeight: 1.6, color: C.ink, background: zone.color + "33", border: `2px solid ${zone.color}` }}>
-            <b>Zona: {zone.label}.</b> {zone.msg}
-          </div>
+              {/* Zonas para soltar (grandes) */}
+              <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 8 }}>
+                {zonas.map((z) => {
+                  const isOver = overZone === z.id;
+                  const isCorrectReveal = resultado && z.id === zonaCorrecta.id;
+                  const isWrongPick = resultado && !resultado.ok && resultado.elegida === z.id;
+                  return (
+                    <div
+                      key={z.id}
+                      onDragOver={(e) => { if (!resultado) { e.preventDefault(); setOverZone(z.id); } }}
+                      onDragLeave={() => setOverZone((o) => (o === z.id ? null : o))}
+                      onDrop={(e) => { e.preventDefault(); if (dragging) soltar(z.id); }}
+                      className="fd-body"
+                      style={{
+                        border: `3px ${isOver ? "solid" : "solid"} ${z.color}`,
+                        background: isOver ? z.color : isCorrectReveal ? z.soft : "#fff",
+                        borderRadius: 16, padding: "14px 12px", textAlign: "center",
+                        transform: isOver ? "scale(1.03)" : "none", transition: "all .15s",
+                        boxShadow: isCorrectReveal ? `0 0 0 3px ${z.color}` : "none",
+                        opacity: resultado && !isCorrectReveal && !isWrongPick ? 0.55 : 1,
+                      }}
+                    >
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: z.color, margin: "0 auto 6px" }} />
+                      <div style={{ fontSize: 15, fontWeight: 900, color: C.ink }}>{z.label}</div>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.sub }}>{z.rango}</div>
+                      {isCorrectReveal && <div className="fd-pop" style={{ fontSize: 12, fontWeight: 800, color: z.color, marginTop: 4 }}>✅ aquí va</div>}
+                      {isWrongPick && <div className="fd-pop" style={{ fontSize: 12, fontWeight: 800, color: C.terra, marginTop: 4 }}>✖️ aquí la soltaste</div>}
+                    </div>
+                  );
+                })}
+              </div>
 
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
-            {m.zones.map((z) => (
-              <span key={z.label} className="fd-body" style={{ fontSize: 12, fontWeight: 700, color: C.ink, background: z.color + "44", borderRadius: 999, padding: "4px 10px" }}>
-                ● {z.label}
-              </span>
-            ))}
-          </div>
+              {/* Feedback + siguiente */}
+              {resultado && (
+                <div className="fd-body fd-pop" style={{ marginTop: 14, background: zonaCorrecta.soft, border: `2px solid ${zonaCorrecta.color}`, borderRadius: 16, padding: "13px 16px" }}>
+                  <div style={{ fontSize: 15.5, fontWeight: 800, color: C.ink }}>
+                    {resultado.ok ? "¡Muy bien! 🎉 " : "Con cuidado 🤔 "}
+                    Una glucosa de <b>{valor} mg/dL</b> está en <b>{zonaCorrecta.label}</b>: {zonaCorrecta.nivel}
+                  </div>
+                  <div style={{ textAlign: "right", marginTop: 12 }}>
+                    <BigBtn onClick={siguiente} bg={C.terra}>{ronda >= TOTAL ? "Ver resultado →" : "Siguiente número →"}</BigBtn>
+                  </div>
+                </div>
+              )}
 
-          <p className="fd-body" style={{ fontSize: 12.5, color: C.sub, margin: "12px 0 0", lineHeight: 1.5 }}>
-            * Metas generales para adultos (ADA). Tu médico puede definir metas personalizadas para ti.
-          </p>
+              {/* Paneles pequeños de referencia: Ayuno / Después de comer / HbA1c */}
+              <div style={{ marginTop: 18 }}>
+                <div className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub, letterSpacing: ".05em", margin: "0 2px 8px" }}>METAS DE REFERENCIA</div>
+                <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))" }}>
+                  {[
+                    { e: "🌅", t: "Ayuno", meta: "80 – 130 mg/dL", d: "antes de desayunar" },
+                    { e: "🍽️", t: "Después de comer", meta: "menos de 180 mg/dL", d: "2 horas después" },
+                    { e: "🩸", t: "HbA1c", meta: "menos de 7 %", d: "promedio de 3 meses" },
+                  ].map((p) => (
+                    <div key={p.t} style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 14, padding: "12px 14px" }}>
+                      <div className="fd-body" style={{ fontSize: 15, fontWeight: 800, color: C.ink }}>{p.e} {p.t}</div>
+                      <div className="fd-body" style={{ fontSize: 13, color: C.sub }}>{p.d}</div>
+                      <div className="fd-body" style={{ fontSize: 14, fontWeight: 800, color: C.verde, marginTop: 4 }}>Meta: {p.meta}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-          <div style={{ marginTop: 16, textAlign: "right" }}>
-            <BigBtn onClick={() => setStep(1)} bg={C.terra}>Ir al caso clínico →</BigBtn>
-          </div>
+              <p className="fd-body" style={{ fontSize: 12.5, color: C.sub, margin: "14px 0 0", lineHeight: 1.5 }}>
+                * Metas generales para adultos (ADA). Tu médico puede definir metas personalizadas para ti.
+              </p>
+            </>
+          ) : (
+            <div className="fd-pop" style={{ textAlign: "center", padding: 10 }}>
+              <div style={{ fontSize: 46 }}>{aciertos >= 4 ? "🏆" : aciertos >= 3 ? "🌟" : "💪"}</div>
+              <div className="fd-display" style={{ fontSize: 24, color: C.ink, fontWeight: 700, margin: "6px 0" }}>{aciertos} de {TOTAL} aciertos</div>
+              <p className="fd-body" style={{ margin: "0 auto 16px", maxWidth: 460, fontSize: 15.5, color: C.ink, lineHeight: 1.6 }}>
+                {aciertos >= 4
+                  ? "¡Excelente! Ya distingues cuándo la glucosa está en meta, en precaución o alta. 💚"
+                  : aciertos >= 3
+                  ? "¡Buen trabajo! Repite el juego para afinar aún más el ojo."
+                  : "Vamos aprendiendo. Recuerda: hasta 130 es meta, 131–180 precaución y más de 180 está alta."}
+              </p>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+                <BigBtn onClick={reiniciarJuego} bg="#fff" color={C.ink}>↺ Jugar de nuevo</BigBtn>
+                <BigBtn onClick={() => setStep(1)} bg={C.terra}>Ir al caso clínico →</BigBtn>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
