@@ -891,7 +891,7 @@ function Tarjetas({ onBack, onComplete }) {
                   </div>
                 )}
                 {misConceptos.map((c) => (
-                  <div key={c.id} className="fd-body fd-pop" style={{ background: t.soft, border: `2px solid ${t.color}`, borderRadius: 12, padding: "10px 12px", fontSize: 13.5, fontWeight: 700, color: C.ink, lineHeight: 1.4 }}>
+                  <div key={c.id} className="fd-body fd-pop" style={{ background: C.verdeSoft, border: `2px solid ${C.verde}`, borderRadius: 12, padding: "10px 12px", fontSize: 13.5, fontWeight: 700, color: C.ink, lineHeight: 1.4 }}>
                     ✅ {c.txt}
                   </div>
                 ))}
