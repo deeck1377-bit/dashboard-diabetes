@@ -343,44 +343,66 @@ function Home({ go, completed, toPortada }) {
 }
 
 /* ============================================================
-   ACTIVIDAD 1 · LA LLAVE Y LA CERRADURA
+   ACTIVIDAD 1 · LA LLAVE Y LA CERRADURA (DIAGRAMA)
    ============================================================ */
 function Llave({ onBack, onComplete }) {
-  const [step, setStep] = useState(0); // 0 intro, 1 sim, 2 quiz
-  const [scenario, setScenario] = useState(null);
-  const [ran, setRan] = useState(false);
-  const [quizOk, setQuizOk] = useState(0);
+  const [step, setStep] = useState(0); // 0 intro, 1 diagrama, 2 reto
 
   const scenarios = {
     normal: {
-      name: "Cuerpo sin diabetes", color: C.verde, soft: C.verdeSoft, keys: 3, enter: 8, lockOk: true,
-      msg: "El páncreas produce insulina (las llaves 🔑). Cada llave abre la cerradura de la célula y la glucosa entra para dar energía. La glucosa en sangre se mantiene en equilibrio. ⚖️",
+      name: "Paciente sin diabetes", short: "Sin diabetes", color: C.verde, soft: C.verdeSoft,
+      keys: 3, entering: 4, lockOpen: true, pancreasOn: true,
+      titulo: "El sistema funciona en equilibrio ⚖️",
+      msg: "El páncreas produce suficiente insulina (las llaves 🔑). Cada llave abre la cerradura de la célula y la glucosa entra para dar energía. La glucosa en la sangre se mantiene normal.",
     },
     tipo1: {
-      name: "Diabetes tipo 1", color: C.rosa, soft: C.rosaSoft, keys: 0, enter: 0, lockOk: true,
-      msg: "El páncreas dejó de fabricar llaves: casi no hay insulina. La glucosa no puede entrar a las células y se acumula en la sangre. Por eso el tratamiento siempre incluye insulina. 💉",
+      name: "Paciente con diabetes tipo 1", short: "Tipo 1", color: C.rosa, soft: C.rosaSoft,
+      keys: 0, entering: 0, lockOpen: false, pancreasOn: false,
+      titulo: "Falta la llave: no hay insulina 🚫🔑",
+      msg: "El páncreas dejó de producir insulina, así que no hay llaves para abrir la célula. La glucosa no puede entrar y se acumula en la sangre. Por eso el tratamiento incluye insulina (💉).",
     },
     tipo2: {
-      name: "Diabetes tipo 2", color: C.terra, soft: C.terraSoft, keys: 3, enter: 2, lockOk: false,
-      msg: "Hay llaves, pero la cerradura está 'oxidada': las células se resisten a la insulina. Solo un poco de glucosa entra y el resto se queda en la sangre. La alimentación, el movimiento y los medicamentos ayudan a 'destapar' la cerradura. 🏃",
+      name: "Paciente con diabetes tipo 2", short: "Tipo 2", color: C.terra, soft: C.terraSoft,
+      keys: 3, entering: 1, lockOpen: false, pancreasOn: true,
+      titulo: "La cerradura se resiste 🔒",
+      msg: "El páncreas sí produce llaves, pero la cerradura de la célula está 'resistente' y no abre bien. Solo un poco de glucosa entra; el resto se queda en la sangre. La alimentación, el movimiento y los medicamentos ayudan a que la llave vuelva a funcionar.",
     },
   };
-  const sc = scenario ? scenarios[scenario] : null;
 
-  // posiciones de glucosa (porcentajes dentro del escenario visual)
-  const outside = [
-    { x: 8, y: 18 }, { x: 20, y: 40 }, { x: 6, y: 60 }, { x: 24, y: 74 },
-    { x: 14, y: 88 }, { x: 30, y: 22 }, { x: 34, y: 58 }, { x: 18, y: 8 },
+  const [scenario, setScenario] = useState("normal");
+  const sc = scenarios[scenario];
+  // fase de animación automática: 0 reposo, 1 comida->glucosa, 2 insulina sale, 3 entra
+  const [phase, setPhase] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
+  React.useEffect(() => {
+    if (!playing) return;
+    const timers = [];
+    setPhase(1);
+    timers.push(setTimeout(() => setPhase(2), 1400));
+    timers.push(setTimeout(() => setPhase(3), 2800));
+    timers.push(setTimeout(() => setPlaying(false), 4600));
+    return () => timers.forEach(clearTimeout);
+  }, [playing]);
+
+  const play = () => { setPhase(0); setPlaying(true); };
+  const resetScene = (id) => { setScenario(id); setPhase(0); setPlaying(false); };
+
+  // glucosa en sangre (posiciones %) y destino dentro de la célula
+  const bloodGlucose = [
+    { x: 20, y: 30 }, { x: 30, y: 52 }, { x: 22, y: 72 }, { x: 34, y: 82 },
+    { x: 15, y: 50 }, { x: 40, y: 40 },
   ];
-  const inside = [
-    { x: 66, y: 34 }, { x: 76, y: 48 }, { x: 68, y: 62 }, { x: 80, y: 30 },
-    { x: 84, y: 58 }, { x: 72, y: 44 }, { x: 78, y: 68 }, { x: 86, y: 42 },
+  const cellGlucose = [
+    { x: 74, y: 40 }, { x: 82, y: 55 }, { x: 76, y: 68 }, { x: 86, y: 44 },
+    { x: 80, y: 32 }, { x: 70, y: 58 },
   ];
 
   return (
     <div className="fd-pop">
-      <TopBar title="Actividad 1 · La llave y la cerradura" onBack={onBack} done={step} total={3} color={C.rosa} />
+      <TopBar title="Actividad 1 · La llave y la cerradura" onBack={onBack} done={step + 1} total={3} color={C.rosa} />
 
+      {/* ---------- INTRO ---------- */}
       {step === 0 && (
         <Card>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
@@ -388,31 +410,50 @@ function Llave({ onBack, onComplete }) {
             <div style={{ flex: 1, minWidth: 240 }}>
               <h2 className="fd-display" style={{ margin: "0 0 8px", fontSize: 22, color: C.ink }}>Tu cuerpo funciona con energía</h2>
               <p className="fd-body" style={{ fontSize: 15.5, lineHeight: 1.7, color: C.ink, margin: 0 }}>
-                Cuando comes, los alimentos se convierten en <b>glucosa</b> (🟠 azúcar en la sangre), el combustible
-                de tus células. Pero la glucosa no puede entrar sola: necesita que la <b>insulina</b> 🔑 — una hormona
-                que fabrica el <b>páncreas</b> — abra la <b>cerradura</b> 🔒 de cada célula.
+                Cuando comes 🍎, los alimentos se convierten en <b>glucosa</b> (el azúcar de la sangre), que es el
+                combustible de tus células. Pero la glucosa no entra sola: necesita una <b>llave</b>.
               </p>
               <p className="fd-body" style={{ fontSize: 15.5, lineHeight: 1.7, color: C.ink, margin: "10px 0 0" }}>
-                La <b>diabetes</b> aparece cuando este sistema de llaves y cerraduras falla. ¿Quieres verlo en acción?
+                Esa llave es la <b>insulina 🔑</b>, una hormona que fabrica el <b>páncreas 🫀</b>. La insulina abre la{" "}
+                <b>cerradura 🔒</b> de cada <b>célula ⚡</b> para que la glucosa pase. Veamos el recorrido completo. 👇
               </p>
             </div>
           </div>
+
+          {/* Mini leyenda de elementos */}
+          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", marginTop: 18 }}>
+            {[
+              { e: "🍎", n: "Comida", d: "se vuelve glucosa" },
+              { e: "🟠", n: "Glucosa", d: "azúcar en la sangre" },
+              { e: "🫀", n: "Páncreas", d: "fabrica insulina" },
+              { e: "🔑", n: "Insulina", d: "la llave" },
+              { e: "🔒", n: "Cerradura", d: "puerta de la célula" },
+              { e: "⚡", n: "Célula", d: "usa la energía" },
+            ].map((it) => (
+              <div key={it.n} className="fd-body" style={{ background: C.bg, border: `1px solid ${C.line}`, borderRadius: 14, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center" }}>
+                <span style={{ fontSize: 24 }}>{it.e}</span>
+                <span style={{ fontSize: 13, lineHeight: 1.3, color: C.ink }}><b>{it.n}</b><br /><span style={{ color: C.sub }}>{it.d}</span></span>
+              </div>
+            ))}
+          </div>
+
           <div style={{ marginTop: 18, textAlign: "right" }}>
-            <BigBtn onClick={() => setStep(1)} bg={C.rosa}>Ver la simulación →</BigBtn>
+            <BigBtn onClick={() => setStep(1)} bg={C.rosa}>Ver el diagrama →</BigBtn>
           </div>
         </Card>
       )}
 
+      {/* ---------- DIAGRAMA AUTOMÁTICO ---------- */}
       {step === 1 && (
         <Card>
-          <p className="fd-body" style={{ fontWeight: 800, fontSize: 16, margin: "0 0 12px", color: C.ink }}>
-            Elige un escenario y presiona <span style={{ color: C.rosa }}>“Comer 🍎”</span> para ver qué pasa con la glucosa:
+          <p className="fd-body" style={{ fontWeight: 800, fontSize: 16, margin: "0 0 6px", color: C.ink }}>
+            Elige un escenario y presiona <span style={{ color: C.rosa }}>“Comer 🍎”</span>. La animación te muestra el recorrido de la glucosa:
           </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0 16px" }}>
             {Object.entries(scenarios).map(([id, s]) => (
               <button
                 key={id}
-                onClick={() => { setScenario(id); setRan(false); }}
+                onClick={() => resetScene(id)}
                 className="fd-body"
                 style={{
                   border: `2px solid ${scenario === id ? s.color : C.line}`,
@@ -421,110 +462,228 @@ function Llave({ onBack, onComplete }) {
                   color: C.ink, cursor: "pointer",
                 }}
               >
-                {s.name}
+                {s.short}
               </button>
             ))}
           </div>
 
-          {/* Escena */}
-          <div style={{ position: "relative", height: 300, background: C.mentaSoft, borderRadius: 18, overflow: "hidden", border: `1px solid ${C.line}` }}>
-            {/* etiquetas */}
-            <div className="fd-body" style={{ position: "absolute", top: 10, left: 12, fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em" }}>SANGRE 🩸</div>
-            <div className="fd-body" style={{ position: "absolute", top: 10, right: 12, fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em" }}>CÉLULA ⚡</div>
+          {/* ESCENA DEL DIAGRAMA */}
+          <div style={{ position: "relative", height: 380, background: "linear-gradient(180deg,#FCF6F3,#F3ECE6)", borderRadius: 20, border: `1px solid ${C.line}`, overflow: "hidden" }}>
 
-            {/* célula */}
+            {/* Etiqueta zona sangre / célula */}
+            <div className="fd-body" style={{ position: "absolute", top: 10, left: 14, fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em", background: "#fff", borderRadius: 999, padding: "3px 10px", border: `1px solid ${C.line}` }}>🩸 TORRENTE SANGUÍNEO</div>
+            <div className="fd-body" style={{ position: "absolute", top: 10, right: 14, fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em", background: "#fff", borderRadius: 999, padding: "3px 10px", border: `1px solid ${C.line}` }}>⚡ CÉLULA</div>
+
+            {/* CÉLULA (lado derecho) */}
             <div style={{
-              position: "absolute", right: "4%", top: "14%", width: "44%", height: "72%",
-              background: "#fff", border: `4px solid ${C.verde}`, borderRadius: "48% 52% 55% 45% / 52% 46% 54% 48%",
+              position: "absolute", right: "3%", top: "18%", width: "42%", height: "70%",
+              background: "rgba(255,255,255,.75)", border: `4px solid ${C.verde}`,
+              borderRadius: "48% 52% 55% 45% / 52% 46% 54% 48%",
             }} />
-            {/* cerradura */}
-            <div style={{ position: "absolute", right: "44%", top: "46%", fontSize: 34, transform: "translate(50%,-50%)", filter: sc && !sc.lockOk ? "grayscale(.4) sepia(.5)" : "none" }}>
-              {ran && sc && sc.enter > 0 ? "🔓" : "🔒"}
+            <div className="fd-body" style={{ position: "absolute", right: "20%", top: "80%", fontSize: 13, fontWeight: 800, color: C.verde }}>⚡ Célula</div>
+
+            {/* CERRADURA en la membrana */}
+            <div style={{ position: "absolute", right: "43%", top: "48%", transform: "translateY(-50%)", textAlign: "center" }}>
+              <div style={{ fontSize: 34, filter: !sc.lockOpen && phase >= 2 ? "grayscale(.3) sepia(.4)" : "none", transition: "all .4s" }}>
+                {sc.lockOpen && phase >= 3 ? "🔓" : "🔒"}
+              </div>
+              <div className="fd-body" style={{ fontSize: 11, fontWeight: 800, color: C.ink, background: "#fff", borderRadius: 999, padding: "1px 8px", marginTop: 2, border: `1px solid ${C.line}` }}>Cerradura</div>
+              {!sc.lockOpen && scenario === "tipo2" && phase >= 2 && (
+                <div className="fd-body fd-pop" style={{ fontSize: 10, fontWeight: 800, color: C.terra, marginTop: 3 }}>resistente</div>
+              )}
             </div>
-            {sc && !sc.lockOk && (
-              <div className="fd-body" style={{ position: "absolute", right: "38%", top: "58%", fontSize: 11, fontWeight: 800, color: C.terra, background: "#fff", borderRadius: 999, padding: "2px 8px" }}>
-                cerradura resistente
-              </div>
-            )}
 
-            {/* llaves */}
-            {sc && Array.from({ length: sc.keys }).map((_, i) => (
-              <div key={i} style={{ position: "absolute", left: `${40 + i * 5}%`, top: `${30 + i * 14}%`, fontSize: 22, transition: "all .8s ease", transform: ran ? "translateX(30px) rotate(20deg)" : "none" }}>🔑</div>
-            ))}
-            {sc && sc.keys === 0 && (
-              <div className="fd-body" style={{ position: "absolute", left: "38%", top: "34%", fontSize: 12, fontWeight: 800, color: C.rosa, background: "#fff", borderRadius: 999, padding: "3px 10px" }}>
-                sin llaves 🚫🔑
+            {/* PÁNCREAS (abajo izquierda) */}
+            <div style={{ position: "absolute", left: "3%", bottom: "6%", textAlign: "center" }}>
+              <div style={{ fontSize: 40, opacity: sc.pancreasOn ? 1 : 0.4, filter: sc.pancreasOn ? "none" : "grayscale(1)", transition: "all .4s" }}>🫀</div>
+              <div className="fd-body" style={{ fontSize: 11, fontWeight: 800, color: C.ink, background: "#fff", borderRadius: 999, padding: "1px 8px", border: `1px solid ${C.line}` }}>Páncreas</div>
+              <div className="fd-body" style={{ fontSize: 10, fontWeight: 700, color: sc.pancreasOn ? C.verde : C.rosa, marginTop: 2 }}>
+                {sc.pancreasOn ? "produce insulina" : "no produce"}
               </div>
-            )}
+            </div>
 
-            {/* glucosa */}
-            {outside.map((p, i) => {
-              const goesIn = sc && ran && i < sc.enter;
-              const pos = goesIn ? inside[i] : ran && sc ? { x: p.x + 4, y: p.y } : p;
+            {/* COMIDA que entra (fase 1) */}
+            <div style={{
+              position: "absolute", left: phase >= 1 ? "14%" : "-10%", top: "16%",
+              fontSize: 30, transition: "left 1s ease", opacity: phase >= 2 ? 0 : 1,
+            }}>
+              🍎<div className="fd-body" style={{ fontSize: 10, fontWeight: 800, color: C.ink, textAlign: "center" }}>Comida</div>
+            </div>
+
+            {/* GLUCOSA en sangre */}
+            {bloodGlucose.map((p, i) => {
+              const goesIn = phase >= 3 && i < sc.entering;
+              const pos = goesIn ? cellGlucose[i] : p;
+              const visible = phase >= 1; // aparece cuando comes
               return (
                 <div key={i} style={{
                   position: "absolute", left: `${pos.x}%`, top: `${pos.y}%`,
-                  width: 18, height: 18, borderRadius: "50%",
+                  width: 20, height: 20, borderRadius: "50%",
                   background: goesIn ? C.verde : C.terra,
-                  border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.15)",
-                  transition: "all 1.1s cubic-bezier(.5,0,.3,1)",
+                  border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.18)",
+                  opacity: visible ? 1 : 0,
+                  transition: "all 1.1s cubic-bezier(.5,0,.3,1), opacity .5s",
                 }} />
               );
             })}
+            {/* etiqueta glucosa */}
+            {phase >= 1 && (
+              <div className="fd-body fd-pop" style={{ position: "absolute", left: "20%", top: "20%", fontSize: 11, fontWeight: 800, color: C.terra, background: "#fff", borderRadius: 999, padding: "1px 8px", border: `1px solid ${C.line}` }}>🟠 Glucosa</div>
+            )}
+
+            {/* LLAVES (insulina) saliendo del páncreas hacia la cerradura (fase 2) */}
+            {Array.from({ length: sc.keys }).map((_, i) => (
+              <div key={i} style={{
+                position: "absolute",
+                left: phase >= 2 ? `${44 + i * 2}%` : "8%",
+                top: phase >= 2 ? `${44 + i * 3}%` : "82%",
+                fontSize: 24, transition: "all 1.1s ease",
+                opacity: phase >= 1 ? 1 : 0,
+              }}>🔑</div>
+            ))}
+            {sc.keys === 0 && phase >= 2 && (
+              <div className="fd-body fd-pop" style={{ position: "absolute", left: "20%", top: "88%", fontSize: 11, fontWeight: 800, color: C.rosa, background: "#fff", borderRadius: 999, padding: "2px 10px", border: `1px solid ${C.line}` }}>
+                Sin insulina 🚫🔑
+              </div>
+            )}
           </div>
 
+          {/* Controles */}
           <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
-            <BigBtn disabled={!scenario} onClick={() => setRan(true)} bg={C.rosa}>Comer 🍎</BigBtn>
-            {ran && <BigBtn onClick={() => setRan(false)} bg="#fff" color={C.ink}>↺ Reiniciar</BigBtn>}
+            <BigBtn onClick={play} disabled={playing} bg={C.rosa}>{playing ? "Reproduciendo…" : "Comer 🍎"}</BigBtn>
+            {phase > 0 && !playing && <BigBtn onClick={() => setPhase(0)} bg="#fff" color={C.ink}>↺ Reiniciar</BigBtn>}
           </div>
 
-          {ran && sc && (
-            <div className="fd-body fd-pop" style={{ marginTop: 14, background: sc.soft, borderRadius: 16, padding: "14px 16px", fontSize: 15, lineHeight: 1.65, color: C.ink }}>
-              <b>{sc.name}:</b> {sc.msg}
+          {/* Explicación del escenario (aparece al terminar) */}
+          {phase >= 3 && (
+            <div className="fd-body fd-pop" style={{ marginTop: 14, background: sc.soft, borderRadius: 16, padding: "14px 16px", border: `2px solid ${sc.color}` }}>
+              <div style={{ fontWeight: 800, fontSize: 15.5, color: C.ink, marginBottom: 4 }}>{sc.name}: {sc.titulo}</div>
+              <div style={{ fontSize: 14.5, lineHeight: 1.6, color: C.ink }}>{sc.msg}</div>
             </div>
           )}
 
+          {/* Semáforo comparativo de los 3 */}
+          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", marginTop: 14 }}>
+            {Object.entries(scenarios).map(([id, s]) => (
+              <div key={id} className="fd-body" style={{ background: "#fff", border: `1px solid ${scenario === id ? s.color : C.line}`, borderRadius: 12, padding: "8px 10px", fontSize: 12.5, color: C.ink }}>
+                <b style={{ color: s.color }}>● {s.short}:</b> {id === "normal" ? "llaves ✔ · cerradura abre ✔" : id === "tipo1" ? "sin llaves ✖ · glucosa atrapada" : "llaves ✔ · cerradura resiste ✖"}
+              </div>
+            ))}
+          </div>
+
           <div style={{ marginTop: 18, textAlign: "right" }}>
-            <BigBtn onClick={() => setStep(2)} bg={C.ink}>Ya lo probé, ¡al reto! →</BigBtn>
+            <BigBtn onClick={() => setStep(2)} bg={C.ink}>Ya lo entendí, ¡al reto! →</BigBtn>
           </div>
         </Card>
       )}
 
-      {step === 2 && (
-        <Card>
-          <h2 className="fd-display" style={{ margin: "0 0 16px", fontSize: 22, color: C.ink }}>Reto rápido 🔑</h2>
-          <div style={{ display: "grid", gap: 22 }}>
-            <Quiz
-              q="1. En la historia de la llave y la cerradura, ¿qué papel juega la insulina?"
-              options={["Es el azúcar que viaja por la sangre", "Es la llave que abre la célula para que entre la glucosa", "Es la energía de las células"]}
-              correct={1}
-              explain="La insulina es la llave 🔑: sin ella (o si la cerradura se resiste), la glucosa se queda en la sangre."
-              onAnswered={(ok) => ok && setQuizOk((v) => v + 1)}
-            />
-            <Quiz
-              q="2. ¿Qué órgano fabrica la insulina?"
-              options={["El hígado", "El corazón", "El páncreas"]}
-              correct={2}
-              explain="El páncreas es la fábrica de llaves de tu cuerpo. En la diabetes, esa fábrica produce poca insulina o el cuerpo no la aprovecha bien."
-              onAnswered={(ok) => ok && setQuizOk((v) => v + 1)}
-            />
-            <Quiz
-              q="3. ¿Qué pasa con la glucosa cuando la insulina falta o no funciona bien?"
-              options={["Se acumula en la sangre", "Desaparece del cuerpo", "Se convierte en insulina"]}
-              correct={0}
-              explain="Exacto: la glucosa se acumula en la sangre (hiperglucemia). Eso es, en esencia, la diabetes."
-              onAnswered={(ok) => ok && setQuizOk((v) => v + 1)}
-            />
-          </div>
-          <div style={{ marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <span className="fd-body" style={{ color: C.sub, fontWeight: 700, fontSize: 14 }}>Aciertos: {quizOk} / 3</span>
-            <BigBtn onClick={() => { onComplete(); onBack(); }} bg={C.verde}>Terminar actividad ✓</BigBtn>
-          </div>
-        </Card>
-      )}
+      {/* ---------- RETO PASO POR PASO ---------- */}
+      {step === 2 && <RetoLlave onFinish={() => { onComplete(); onBack(); }} />}
     </div>
   );
 }
+
+/* Reto paso por paso: una pregunta a la vez */
+function RetoLlave({ onFinish }) {
+  const preguntas = [
+    {
+      q: "En el diagrama, ¿qué representa la llave 🔑?",
+      options: ["La glucosa (el azúcar)", "La insulina que fabrica el páncreas", "La célula"],
+      correct: 1,
+      explain: "La llave es la insulina 🔑. Sin ella (o si la cerradura se resiste), la glucosa no puede entrar a la célula.",
+    },
+    {
+      q: "¿Qué órgano fabrica la insulina (las llaves)?",
+      options: ["El hígado", "El páncreas 🫀", "El estómago"],
+      correct: 1,
+      explain: "El páncreas es la fábrica de llaves del cuerpo. En la diabetes, produce poca insulina o el cuerpo no la aprovecha.",
+    },
+    {
+      q: "En la diabetes tipo 1, ¿qué sucede?",
+      options: ["El páncreas deja de producir insulina (no hay llaves)", "Hay demasiadas llaves", "La célula desaparece"],
+      correct: 0,
+      explain: "En el tipo 1 no hay llaves: por eso la glucosa se queda en la sangre y el tratamiento incluye insulina 💉.",
+    },
+    {
+      q: "En la diabetes tipo 2, ¿qué falla principalmente?",
+      options: ["No existe la glucosa", "La cerradura de la célula se resiste a abrir", "El páncreas explota"],
+      correct: 1,
+      explain: "En el tipo 2 sí hay llaves, pero la cerradura está 'resistente'. Hábitos y medicamentos ayudan a que vuelva a abrir.",
+    },
+    {
+      q: "Cuando la glucosa no entra a la célula, ¿dónde se queda?",
+      options: ["Se acumula en la sangre", "Se convierte en insulina", "Sale por la piel"],
+      correct: 0,
+      explain: "Se acumula en la sangre (hiperglucemia). Eso es, en esencia, lo que ocurre en la diabetes.",
+    },
+  ];
+  const [idx, setIdx] = useState(0);
+  const [picked, setPicked] = useState(null);
+  const [ok, setOk] = useState(0);
+  const q = preguntas[idx];
+  const answered = picked !== null;
+  const last = idx === preguntas.length - 1;
+
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <h2 className="fd-display" style={{ margin: 0, fontSize: 22, color: C.ink }}>Reto rápido 🔑</h2>
+        <span className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub }}>Pregunta {idx + 1} de {preguntas.length}</span>
+      </div>
+      {/* barra de progreso */}
+      <div style={{ display: "flex", gap: 5, marginBottom: 18 }}>
+        {preguntas.map((_, i) => (
+          <div key={i} style={{ height: 6, flex: 1, borderRadius: 999, background: i < idx ? C.verde : i === idx ? C.rosa : C.line, transition: "background .3s" }} />
+        ))}
+      </div>
+
+      <p className="fd-body" style={{ fontWeight: 800, fontSize: 17, color: C.ink, margin: "0 0 14px" }}>{q.q}</p>
+      <div style={{ display: "grid", gap: 10 }}>
+        {q.options.map((op, i) => {
+          const isCorrect = i === q.correct;
+          let bg = "#fff", border = C.line;
+          if (answered && isCorrect) { bg = C.verdeSoft; border = C.verde; }
+          else if (answered && picked === i && !isCorrect) { bg = C.terraSoft; border = C.terra; }
+          return (
+            <button
+              key={i}
+              disabled={answered}
+              onClick={() => { setPicked(i); if (i === q.correct) setOk((v) => v + 1); }}
+              className="fd-body"
+              style={{ textAlign: "left", background: bg, border: `2px solid ${border}`, borderRadius: 14, padding: "13px 16px", fontSize: 15.5, color: C.ink, cursor: answered ? "default" : "pointer", fontWeight: 600, transition: "all .2s" }}
+            >
+              {answered && isCorrect ? "✅ " : answered && picked === i ? "✖️ " : ""}{op}
+            </button>
+          );
+        })}
+      </div>
+
+      {answered && (
+        <div className="fd-body fd-pop" style={{ marginTop: 14, background: picked === q.correct ? C.verdeSoft : C.duraznoSoft, borderRadius: 14, padding: "13px 16px", fontSize: 14.5, lineHeight: 1.6, color: C.ink }}>
+          <b>{picked === q.correct ? "¡Muy bien! " : "Casi. "}</b>{q.explain}
+        </div>
+      )}
+
+      {answered && (
+        <div style={{ marginTop: 18, textAlign: "right" }}>
+          {!last ? (
+            <BigBtn onClick={() => { setIdx((i) => i + 1); setPicked(null); }} bg={C.rosa}>Siguiente →</BigBtn>
+          ) : (
+            <div className="fd-pop" style={{ textAlign: "center", background: C.verdeSoft, borderRadius: 18, padding: 20 }}>
+              <div style={{ fontSize: 40 }}>{ok >= 4 ? "🏆" : ok >= 3 ? "🌟" : "💪"}</div>
+              <div className="fd-display" style={{ fontSize: 22, color: C.ink, fontWeight: 700, margin: "6px 0" }}>{ok} de {preguntas.length} aciertos</div>
+              <p className="fd-body" style={{ margin: "0 0 14px", fontSize: 15, color: C.ink }}>
+                {ok >= 4 ? "¡Dominaste cómo funciona la insulina! 💚" : ok >= 3 ? "¡Buen trabajo! Puedes repasar el diagrama cuando quieras." : "Vuelve a ver el diagrama y reintenta: cada vez lo entiendes mejor."}
+              </p>
+              <BigBtn onClick={onFinish} bg={C.verde}>Terminar actividad ✓</BigBtn>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 
 /* ============================================================
    ACTIVIDAD 2 · TARJETAS COMPARATIVAS
