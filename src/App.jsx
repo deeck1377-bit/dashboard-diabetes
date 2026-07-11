@@ -390,21 +390,21 @@ function Llave({ onBack, onComplete }) {
       "",
       "Paso 1 · Comes alimentos 🍎",
       "Paso 2 · La comida se vuelve GLUCOSA (azúcar) 🟠 y viaja por tu SANGRE 🩸",
-      "Paso 3 · El PÁNCREAS 🫀 suelta INSULINA 🔑 (las llaves)",
+      "Paso 3 · El PÁNCREAS 🏭 suelta INSULINA 🔑 (las llaves)",
       "Paso 4 · La llave abre la puerta y la glucosa ENTRA a la célula ⚡ ¡ENERGÍA!",
     ],
     tipo1: [
       "",
       "Paso 1 · Comes alimentos 🍎",
       "Paso 2 · La GLUCOSA 🟠 viaja por tu SANGRE 🩸",
-      "Paso 3 · El PÁNCREAS 🫀 está apagado: NO hay llaves 🚫🔑",
+      "Paso 3 · El PÁNCREAS 🏭 está apagado: NO hay llaves 🚫🔑",
       "Paso 4 · Sin llaves, la glucosa NO entra y se queda en la sangre 🟠",
     ],
     tipo2: [
       "",
       "Paso 1 · Comes alimentos 🍎",
       "Paso 2 · La GLUCOSA 🟠 viaja por tu SANGRE 🩸",
-      "Paso 3 · El PÁNCREAS 🫀 sí suelta llaves 🔑, pero la puerta se RESISTE 🔒",
+      "Paso 3 · El PÁNCREAS 🏭 sí suelta llaves 🔑, pero la puerta se RESISTE 🔒",
       "Paso 4 · La puerta casi no abre: poca glucosa entra, el resto se acumula 🟠",
     ],
   };
@@ -450,7 +450,7 @@ function Llave({ onBack, onComplete }) {
                 combustible de tus células. Pero la glucosa no entra sola: necesita una <b>llave</b>.
               </p>
               <p className="fd-body" style={{ fontSize: 15.5, lineHeight: 1.7, color: C.ink, margin: "10px 0 0" }}>
-                Esa llave es la <b>insulina 🔑</b>, una hormona que fabrica el <b>páncreas 🫀</b>. La insulina abre la{" "}
+                Esa llave es la <b>insulina 🔑</b>, una hormona que fabrica el <b>páncreas 🏭</b>. La insulina abre la{" "}
                 <b>cerradura 🔒</b> de cada <b>célula ⚡</b> para que la glucosa pase. Veamos el recorrido completo. 👇
               </p>
             </div>
@@ -461,7 +461,7 @@ function Llave({ onBack, onComplete }) {
             {[
               { e: "🍎", n: "Comida", d: "se vuelve glucosa" },
               { e: "🟠", n: "Glucosa", d: "azúcar en la sangre" },
-              { e: "🫀", n: "Páncreas", d: "fabrica insulina" },
+              { e: "🏭", n: "Páncreas", d: "fabrica insulina" },
               { e: "🔑", n: "Insulina", d: "la llave" },
               { e: "🔒", n: "Cerradura", d: "puerta de la célula" },
               { e: "⚡", n: "Célula", d: "usa la energía" },
@@ -571,8 +571,9 @@ function Llave({ onBack, onComplete }) {
               <div
                 className={sc.pancreasOn && phase >= 3 ? "fd-beat" : ""}
                 style={{ fontSize: 54, opacity: sc.pancreasOn ? 1 : 0.35, filter: sc.pancreasOn ? "none" : "grayscale(1)", transition: "all .4s" }}
-              >🫀</div>
+              >🏭</div>
               <div className="fd-body" style={{ fontSize: 14, fontWeight: 900, color: C.ink, background: "#fff", borderRadius: 999, padding: "2px 12px", border: `2px solid ${C.line}` }}>PÁNCREAS</div>
+              <div className="fd-body" style={{ fontSize: 11, fontWeight: 700, color: C.sub, marginTop: 2 }}>tu fábrica de insulina</div>
               <div className="fd-body" style={{ fontSize: 12, fontWeight: 800, color: sc.pancreasOn ? C.verde : C.rosa, marginTop: 3 }}>
                 {sc.pancreasOn ? "fabrica insulina 🔑" : "no fabrica insulina 🚫"}
               </div>
@@ -672,7 +673,7 @@ function RetoLlave({ onFinish }) {
     },
     {
       q: "¿Qué órgano fabrica la insulina (las llaves)?",
-      options: ["El hígado", "El páncreas 🫀", "El estómago"],
+      options: ["El hígado", "El páncreas 🏭", "El estómago"],
       correct: 1,
       explain: "El páncreas es la fábrica de llaves del cuerpo. En la diabetes, produce poca insulina o el cuerpo no la aprovecha.",
     },
