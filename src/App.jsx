@@ -243,9 +243,9 @@ function Home({ go, completed, toPortada }) {
       tag: "¿Qué es la diabetes?",
     },
     {
-      id: "tarjetas", emoji: "🃏", color: C.verde, soft: C.verdeSoft,
-      title: "Tarjetas comparativas",
-      desc: "Voltea las tarjetas y aprende a diferenciar la diabetes tipo 1, tipo 2 y gestacional.",
+      id: "tarjetas", emoji: "🧩", color: C.verde, soft: C.verdeSoft,
+      title: "¿A quién pertenece?",
+      desc: "Arrastra cada característica al personaje correcto y aprende a diferenciar la diabetes tipo 1, tipo 2 y gestacional.",
       tag: "Tipos de diabetes",
     },
     {
@@ -765,168 +765,162 @@ function RetoLlave({ onFinish }) {
 
 
 /* ============================================================
-   ACTIVIDAD 2 · TARJETAS COMPARATIVAS
+   ACTIVIDAD 2 · ¿A QUIÉN PERTENECE? (ARRASTRAR Y SOLTAR)
    ============================================================ */
 function Tarjetas({ onBack, onComplete }) {
-  const [step, setStep] = useState(0); // 0 explorar, 1 reto
-  const [flipped, setFlipped] = useState({});
-  const [answers, setAnswers] = useState({});
-
   const tipos = [
-    {
-      id: "t1", nombre: "Tipo 1", color: C.rosa, soft: C.rosaSoft, emoji: "1️⃣",
-      cards: [
-        { cat: "¿Qué pasa en el cuerpo?", txt: "El sistema de defensa ataca al páncreas y este deja de producir insulina. No hay llaves 🔑." },
-        { cat: "¿A quién suele darle?", txt: "Con más frecuencia a niños, adolescentes y jóvenes, aunque puede aparecer a cualquier edad." },
-        { cat: "Tratamiento", txt: "Insulina siempre 💉, junto con alimentación saludable, actividad física y monitoreo." },
-        { cat: "Dato clave", txt: "No se causa por comer azúcar ni por el estilo de vida. Nadie tiene la culpa." },
-      ],
-    },
-    {
-      id: "t2", nombre: "Tipo 2", color: C.verde, soft: C.verdeSoft, emoji: "2️⃣",
-      cards: [
-        { cat: "¿Qué pasa en el cuerpo?", txt: "Las células se resisten a la insulina (cerradura oxidada 🔒) y con el tiempo el páncreas se agota." },
-        { cat: "¿A quién suele darle?", txt: "Es el tipo más común (9 de cada 10 casos). Influyen la herencia familiar, el peso y el estilo de vida." },
-        { cat: "Tratamiento", txt: "Alimentación, movimiento 🏃, pastillas y, en algunos casos, insulina. ¡Los hábitos son medicina!" },
-        { cat: "Dato clave", txt: "Puede pasar años sin síntomas. Por eso el chequeo y el automonitoreo son tan importantes." },
-      ],
-    },
-    {
-      id: "g", nombre: "Gestacional", color: C.terra, soft: C.terraSoft, emoji: "🤰",
-      cards: [
-        { cat: "¿Qué pasa en el cuerpo?", txt: "Las hormonas del embarazo hacen que la insulina funcione menos y la glucosa sube." },
-        { cat: "¿A quién suele darle?", txt: "A algunas mujeres durante el embarazo, generalmente detectada entre las semanas 24 y 28." },
-        { cat: "Tratamiento", txt: "Plan de alimentación, actividad física y, si hace falta, insulina. Cuida a mamá y a bebé 💕." },
-        { cat: "Dato clave", txt: "Suele desaparecer después del parto, pero aumenta el riesgo de diabetes tipo 2 en el futuro." },
-      ],
-    },
+    { id: "t1", persona: "👦", nombre: "Diabetes Tipo 1", sub: "suele aparecer en niños y jóvenes", color: C.rosa, soft: C.rosaSoft },
+    { id: "t2", persona: "🧑", nombre: "Diabetes Tipo 2", sub: "la más común, en adultos", color: C.verde, soft: C.verdeSoft },
+    { id: "g", persona: "🤰", nombre: "Diabetes Gestacional", sub: "durante el embarazo", color: C.terra, soft: C.terraSoft },
   ];
 
-  const reto = [
-    { txt: "Aparece con más frecuencia en la infancia o la juventud", ans: "t1" },
-    { txt: "Es el tipo más común y se relaciona con herencia y estilo de vida", ans: "t2" },
-    { txt: "Aparece durante el embarazo y suele desaparecer después del parto", ans: "g" },
-    { txt: "El páncreas deja de producir insulina casi por completo", ans: "t1" },
-    { txt: "El cuerpo sí produce insulina, pero las células se resisten a ella", ans: "t2" },
-    { txt: "Aumenta el riesgo de desarrollar diabetes tipo 2 más adelante", ans: "g" },
+  const conceptosBase = [
+    { id: "c1", txt: "El páncreas deja de producir insulina", owner: "t1" },
+    { id: "c2", txt: "Aparece con más frecuencia en la infancia o juventud", owner: "t1" },
+    { id: "c3", txt: "Siempre necesita insulina como tratamiento 💉", owner: "t1" },
+    { id: "c4", txt: "Es el tipo más común (9 de cada 10 casos)", owner: "t2" },
+    { id: "c5", txt: "Las células se resisten a la insulina", owner: "t2" },
+    { id: "c6", txt: "Se relaciona con herencia, peso y estilo de vida", owner: "t2" },
+    { id: "c7", txt: "Aparece durante el embarazo 🤰", owner: "g" },
+    { id: "c8", txt: "Suele desaparecer después del parto", owner: "g" },
+    { id: "c9", txt: "Aumenta el riesgo de diabetes tipo 2 en el futuro", owner: "g" },
   ];
-  const answeredCount = Object.keys(answers).length;
-  const okCount = reto.filter((r, i) => answers[i] === r.ans).length;
+
+  // barajar una sola vez
+  const [pool, setPool] = useState(() => {
+    const arr = [...conceptosBase];
+    for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    return arr;
+  });
+  const [placed, setPlaced] = useState({}); // conceptId -> tipoId
+  const [wrong, setWrong] = useState(null); // conceptId que se soltó mal (feedback temporal)
+  const [dragId, setDragId] = useState(null);
+  const [overZone, setOverZone] = useState(null);
+
+  const remaining = pool.filter((c) => !placed[c.id]);
+  const totalOk = Object.entries(placed).filter(([cid, tid]) => conceptosBase.find((c) => c.id === cid).owner === tid).length;
+  const done = remaining.length === 0;
+
+  const handleDrop = (tipoId, conceptId) => {
+    const concept = conceptosBase.find((c) => c.id === conceptId);
+    if (!concept) return;
+    if (concept.owner === tipoId) {
+      setPlaced((p) => ({ ...p, [conceptId]: tipoId }));
+      setWrong(null);
+    } else {
+      setWrong(conceptId);
+      setTimeout(() => setWrong((w) => (w === conceptId ? null : w)), 1200);
+    }
+    setDragId(null);
+    setOverZone(null);
+  };
+
+  const reset = () => { setPlaced({}); setWrong(null); setDragId(null); setOverZone(null); };
 
   return (
     <div className="fd-pop">
-      <TopBar title="Actividad 2 · Tarjetas comparativas" onBack={onBack} done={step + 1} total={2} color={C.verde} />
+      <TopBar title="Actividad 2 · ¿A quién pertenece?" onBack={onBack} done={done ? 1 : 0} total={1} color={C.verde} />
 
-      {step === 0 && (
-        <>
-          <Card style={{ marginBottom: 14 }}>
-            <p className="fd-body" style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65, color: C.ink }}>
-              No existe una sola diabetes: existen <b>varios tipos</b> y cada uno tiene su propia historia.
-              <b> Toca cada tarjeta para voltearla</b> 👆 y descubre en qué se parecen y en qué se diferencian.
-              Identificar <b>tu tipo de diabetes</b> es el primer paso para cuidarte mejor.
-            </p>
-          </Card>
+      <Card style={{ marginBottom: 14 }}>
+        <p className="fd-body" style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: C.ink }}>
+          Conoce a los tres tipos de diabetes. <b>Arrastra cada tarjeta de la parte de arriba</b> 👆 y suéltala sobre
+          el personaje al que corresponde. Si aciertas, la tarjeta se queda con él. ¡Tú puedes!
+        </p>
+      </Card>
 
-          {tipos.map((t) => (
-            <div key={t.id} style={{ marginBottom: 18 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 4px 10px" }}>
-                <BrushCircle color={t.color} size={44}>{t.emoji}</BrushCircle>
-                <h3 className="fd-display" style={{ margin: 0, fontSize: 20, color: C.ink }}>Diabetes {t.nombre}</h3>
+      {/* BANCO DE CONCEPTOS (arrastrables) */}
+      {!done && (
+        <div style={{ marginBottom: 16 }}>
+          <div className="fd-body" style={{ fontSize: 13, fontWeight: 800, color: C.sub, letterSpacing: ".06em", margin: "0 4px 8px" }}>
+            CONCEPTOS POR COLOCAR ({remaining.length})
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", background: C.bg, border: `2px dashed ${C.line}`, borderRadius: 18, padding: 14, minHeight: 60 }}>
+            {remaining.map((c) => (
+              <div
+                key={c.id}
+                draggable
+                onDragStart={() => setDragId(c.id)}
+                onDragEnd={() => { setDragId(null); setOverZone(null); }}
+                className="fd-body"
+                style={{
+                  background: wrong === c.id ? C.terraSoft : "#fff",
+                  border: `2px solid ${wrong === c.id ? C.terra : C.line}`,
+                  borderRadius: 14, padding: "12px 14px", fontSize: 14.5, fontWeight: 700,
+                  color: C.ink, cursor: "grab", maxWidth: 260, lineHeight: 1.4,
+                  boxShadow: dragId === c.id ? "0 6px 16px rgba(66,61,58,.2)" : "0 2px 6px rgba(66,61,58,.06)",
+                  opacity: dragId === c.id ? 0.5 : 1, userSelect: "none",
+                  transform: wrong === c.id ? "translateX(0)" : "none",
+                }}
+              >
+                ⠿ {c.txt}
+                {wrong === c.id && <div style={{ fontSize: 12, fontWeight: 800, color: C.terra, marginTop: 4 }}>Ese no es… inténtalo de nuevo 🤔</div>}
               </div>
-              <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-                {t.cards.map((cardData, ci) => {
-                  const key = t.id + ci;
-                  const isFlip = !!flipped[key];
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => setFlipped((f) => ({ ...f, [key]: !f[key] }))}
-                      style={{ perspective: 900, background: "none", border: "none", padding: 0, cursor: "pointer", minHeight: 150 }}
-                      aria-pressed={isFlip}
-                    >
-                      <div style={{
-                        position: "relative", width: "100%", height: "100%", minHeight: 150,
-                        transformStyle: "preserve-3d", transition: "transform .5s",
-                        transform: isFlip ? "rotateY(180deg)" : "none",
-                      }}>
-                        <div style={{
-                          position: "absolute", inset: 0, backfaceVisibility: "hidden",
-                          background: t.soft, border: `2px solid ${t.color}`, borderRadius: 16,
-                          display: "grid", placeItems: "center", padding: 12,
-                        }}>
-                          <div>
-                            <div style={{ fontSize: 26, marginBottom: 6 }}>❔</div>
-                            <div className="fd-body" style={{ fontWeight: 800, fontSize: 14, color: C.ink }}>{cardData.cat}</div>
-                            <div className="fd-body" style={{ fontSize: 12, color: C.sub, marginTop: 4 }}>toca para voltear</div>
-                          </div>
-                        </div>
-                        <div style={{
-                          position: "absolute", inset: 0, backfaceVisibility: "hidden", transform: "rotateY(180deg)",
-                          background: "#fff", border: `2px solid ${t.color}`, borderRadius: 16,
-                          display: "grid", placeItems: "center", padding: 14,
-                        }}>
-                          <p className="fd-body" style={{ margin: 0, fontSize: 13.5, lineHeight: 1.5, color: C.ink, textAlign: "left" }}>{cardData.txt}</p>
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* PERSONAJES CON SU RECUADRO */}
+      <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))" }}>
+        {tipos.map((t) => {
+          const misConceptos = conceptosBase.filter((c) => placed[c.id] === t.id);
+          const isOver = overZone === t.id;
+          return (
+            <div key={t.id} style={{ display: "flex", flexDirection: "column" }}>
+              {/* Personaje */}
+              <div style={{ textAlign: "center", marginBottom: 8 }}>
+                <div style={{ fontSize: 60, lineHeight: 1 }}>{t.persona}</div>
+                <div className="fd-display" style={{ fontSize: 19, fontWeight: 700, color: C.ink, marginTop: 4 }}>{t.nombre}</div>
+                <div className="fd-body" style={{ fontSize: 12.5, color: C.sub }}>{t.sub}</div>
+              </div>
+              {/* Recuadro / zona de drop */}
+              <div
+                onDragOver={(e) => { e.preventDefault(); setOverZone(t.id); }}
+                onDragLeave={() => setOverZone((z) => (z === t.id ? null : z))}
+                onDrop={(e) => { e.preventDefault(); if (dragId) handleDrop(t.id, dragId); }}
+                style={{
+                  flex: 1, minHeight: 150, borderRadius: 18,
+                  border: `3px ${isOver ? "solid" : "dashed"} ${isOver ? t.color : C.line}`,
+                  background: isOver ? t.soft : "#fff",
+                  padding: 12, transition: "all .15s", display: "flex", flexDirection: "column", gap: 8,
+                }}
+              >
+                {misConceptos.length === 0 && (
+                  <div className="fd-body" style={{ margin: "auto", color: C.sub, fontSize: 13.5, textAlign: "center", fontWeight: 700 }}>
+                    Suelta aquí las tarjetas de {t.nombre.replace("Diabetes ", "")}
+                  </div>
+                )}
+                {misConceptos.map((c) => (
+                  <div key={c.id} className="fd-body fd-pop" style={{ background: t.soft, border: `2px solid ${t.color}`, borderRadius: 12, padding: "10px 12px", fontSize: 13.5, fontWeight: 700, color: C.ink, lineHeight: 1.4 }}>
+                    ✅ {c.txt}
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          );
+        })}
+      </div>
 
-          <div style={{ textAlign: "right", marginTop: 6 }}>
-            <BigBtn onClick={() => setStep(1)} bg={C.verde}>Ir al mini reto →</BigBtn>
+      {/* Progreso / cierre */}
+      <div style={{ marginTop: 18 }}>
+        {!done ? (
+          <div className="fd-body" style={{ textAlign: "center", color: C.sub, fontWeight: 700, fontSize: 14 }}>
+            Colocadas correctamente: {Object.keys(placed).length} / {conceptosBase.length}
           </div>
-        </>
-      )}
-
-      {step === 1 && (
-        <Card>
-          <h2 className="fd-display" style={{ margin: "0 0 6px", fontSize: 22, color: C.ink }}>Mini reto: ¿de qué tipo hablamos? 🃏</h2>
-          <p className="fd-body" style={{ margin: "0 0 16px", fontSize: 14.5, color: C.sub }}>Lee cada pista y elige el tipo de diabetes que corresponde.</p>
-          <div style={{ display: "grid", gap: 14 }}>
-            {reto.map((r, i) => {
-              const picked = answers[i];
-              return (
-                <div key={i} style={{ border: `1px solid ${C.line}`, borderRadius: 16, padding: 14 }}>
-                  <p className="fd-body" style={{ margin: "0 0 10px", fontWeight: 700, fontSize: 15, color: C.ink }}>{i + 1}. {r.txt}</p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {tipos.map((t) => {
-                      const isPick = picked === t.id;
-                      const isRight = r.ans === t.id;
-                      let bg = "#fff", bd = C.line;
-                      if (picked) {
-                        if (isRight) { bg = C.verdeSoft; bd = C.verde; }
-                        else if (isPick) { bg = C.terraSoft; bd = C.terra; }
-                      }
-                      return (
-                        <button
-                          key={t.id}
-                          disabled={!!picked}
-                          onClick={() => setAnswers((a) => ({ ...a, [i]: t.id }))}
-                          className="fd-body"
-                          style={{ border: `2px solid ${bd}`, background: bg, borderRadius: 999, padding: "8px 14px", fontWeight: 800, fontSize: 13.5, color: C.ink, cursor: picked ? "default" : "pointer" }}
-                        >
-                          {picked && isRight ? "✅ " : ""}{t.nombre}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+        ) : (
+          <div className="fd-pop" style={{ textAlign: "center", background: C.verdeSoft, borderRadius: 18, padding: 22 }}>
+            <div style={{ fontSize: 46 }}>🎉</div>
+            <div className="fd-display" style={{ fontSize: 23, color: C.ink, fontWeight: 700, margin: "6px 0" }}>¡Muy bien hecho!</div>
+            <p className="fd-body" style={{ margin: "0 0 16px", fontSize: 15.5, color: C.ink, lineHeight: 1.6 }}>
+              Colocaste correctamente las 9 características. Ya sabes diferenciar la diabetes tipo 1 (👦), tipo 2 (🧑) y gestacional (🤰).
+            </p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+              <BigBtn onClick={reset} bg="#fff" color={C.ink}>↺ Jugar de nuevo</BigBtn>
+              <BigBtn onClick={() => { onComplete(); onBack(); }} bg={C.verde}>Terminar actividad ✓</BigBtn>
+            </div>
           </div>
-          <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <span className="fd-body" style={{ color: C.sub, fontWeight: 700, fontSize: 14 }}>
-              {answeredCount === reto.length ? `Resultado: ${okCount} / ${reto.length} 🎯` : `Respondidas: ${answeredCount} / ${reto.length}`}
-            </span>
-            <BigBtn disabled={answeredCount < reto.length} onClick={() => { onComplete(); onBack(); }} bg={C.verde}>
-              Terminar actividad ✓
-            </BigBtn>
-          </div>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -1158,7 +1152,7 @@ function Portada({ go, done1, done2 }) {
       id: "home1", num: "Trabajo 1", title: "Generalidades de la diabetes",
       desc: "Qué es la diabetes, la función del páncreas y la insulina, los tipos que existen y las metas de control glucémico.",
       emoji: "📘", color: C.verde, soft: C.verdeSoft, prog: p1, total: 3,
-      temas: ["La llave y la cerradura", "Tarjetas comparativas", "Velocímetro glucémico"],
+      temas: ["La llave y la cerradura", "¿A quién pertenece?", "Velocímetro glucémico"],
     },
     {
       id: "home2", num: "Trabajo 2", title: "Resolver problemas",
