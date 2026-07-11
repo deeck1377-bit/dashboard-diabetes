@@ -28,6 +28,14 @@ const FONT_CSS = `
 .fd-body { font-family: 'Nunito Sans', 'Segoe UI', sans-serif; }
 @keyframes fd-pop { 0% { transform: scale(.92); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
 @keyframes fd-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes fd-shake { 0%,100% { transform: translateX(0) rotate(0) } 20% { transform: translateX(-4px) rotate(-6deg) } 40% { transform: translateX(4px) rotate(6deg) } 60% { transform: translateX(-3px) rotate(-4deg) } 80% { transform: translateX(3px) rotate(4deg) } }
+@keyframes fd-beat { 0%,100% { transform: scale(1) } 30% { transform: scale(1.18) } 50% { transform: scale(1.02) } }
+@keyframes fd-energy { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(130,172,140,.6) } 50% { transform: scale(1.03); box-shadow: 0 0 0 18px rgba(130,172,140,0) } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(130,172,140,0) } }
+@keyframes fd-spark { 0%,100% { opacity: .3; transform: scale(.8) } 50% { opacity: 1; transform: scale(1.25) } }
+.fd-shake { animation: fd-shake .5s ease-in-out infinite }
+.fd-beat { animation: fd-beat 1.1s ease-in-out infinite }
+.fd-energy { animation: fd-energy 1.4s ease-in-out infinite }
+.fd-spark { animation: fd-spark 1s ease-in-out infinite }
 .fd-pop { animation: fd-pop .35s ease both }
 @media (prefers-reduced-motion: reduce) {
   .fd-pop { animation: none }
@@ -371,31 +379,59 @@ function Llave({ onBack, onComplete }) {
 
   const [scenario, setScenario] = useState("normal");
   const sc = scenarios[scenario];
-  // fase de animación automática: 0 reposo, 1 comida->glucosa, 2 insulina sale, 3 entra
+  // fase de animación automática MUY LENTA con subtítulo por paso:
+  // 0 reposo · 1 comes · 2 glucosa en sangre · 3 páncreas suelta insulina · 4 resultado
   const [phase, setPhase] = useState(0);
   const [playing, setPlaying] = useState(false);
+
+  // Subtítulos grandes por escenario y fase
+  const subtitulos = {
+    normal: [
+      "",
+      "Paso 1 · Comes alimentos 🍎",
+      "Paso 2 · La comida se vuelve GLUCOSA (azúcar) 🟠 y viaja por tu SANGRE 🩸",
+      "Paso 3 · El PÁNCREAS 🫀 suelta INSULINA 🔑 (las llaves)",
+      "Paso 4 · La llave abre la puerta y la glucosa ENTRA a la célula ⚡ ¡ENERGÍA!",
+    ],
+    tipo1: [
+      "",
+      "Paso 1 · Comes alimentos 🍎",
+      "Paso 2 · La GLUCOSA 🟠 viaja por tu SANGRE 🩸",
+      "Paso 3 · El PÁNCREAS 🫀 está apagado: NO hay llaves 🚫🔑",
+      "Paso 4 · Sin llaves, la glucosa NO entra y se queda en la sangre 🟠",
+    ],
+    tipo2: [
+      "",
+      "Paso 1 · Comes alimentos 🍎",
+      "Paso 2 · La GLUCOSA 🟠 viaja por tu SANGRE 🩸",
+      "Paso 3 · El PÁNCREAS 🫀 sí suelta llaves 🔑, pero la puerta se RESISTE 🔒",
+      "Paso 4 · La puerta casi no abre: poca glucosa entra, el resto se acumula 🟠",
+    ],
+  };
 
   React.useEffect(() => {
     if (!playing) return;
     const timers = [];
+    const STEP = 2600; // muy lento para tercera edad
     setPhase(1);
-    timers.push(setTimeout(() => setPhase(2), 1400));
-    timers.push(setTimeout(() => setPhase(3), 2800));
-    timers.push(setTimeout(() => setPlaying(false), 4600));
+    timers.push(setTimeout(() => setPhase(2), STEP));
+    timers.push(setTimeout(() => setPhase(3), STEP * 2));
+    timers.push(setTimeout(() => setPhase(4), STEP * 3));
+    timers.push(setTimeout(() => setPlaying(false), STEP * 4));
     return () => timers.forEach(clearTimeout);
   }, [playing]);
 
   const play = () => { setPhase(0); setPlaying(true); };
   const resetScene = (id) => { setScenario(id); setPhase(0); setPlaying(false); };
 
-  // glucosa en sangre (posiciones %) y destino dentro de la célula
+  // glucosa en sangre (dentro del río rojo, lado izquierdo) y destino dentro de la célula
   const bloodGlucose = [
-    { x: 20, y: 30 }, { x: 30, y: 52 }, { x: 22, y: 72 }, { x: 34, y: 82 },
-    { x: 15, y: 50 }, { x: 40, y: 40 },
+    { x: 14, y: 42 }, { x: 24, y: 56 }, { x: 18, y: 68 }, { x: 30, y: 48 },
+    { x: 22, y: 34 }, { x: 34, y: 62 },
   ];
   const cellGlucose = [
-    { x: 74, y: 40 }, { x: 82, y: 55 }, { x: 76, y: 68 }, { x: 86, y: 44 },
-    { x: 80, y: 32 }, { x: 70, y: 58 },
+    { x: 74, y: 42 }, { x: 82, y: 56 }, { x: 76, y: 68 }, { x: 86, y: 46 },
+    { x: 80, y: 34 }, { x: 70, y: 58 },
   ];
 
   return (
@@ -443,22 +479,22 @@ function Llave({ onBack, onComplete }) {
         </Card>
       )}
 
-      {/* ---------- DIAGRAMA AUTOMÁTICO ---------- */}
+      {/* ---------- DIAGRAMA AUTOMÁTICO (grande, lento, rotulado) ---------- */}
       {step === 1 && (
         <Card>
-          <p className="fd-body" style={{ fontWeight: 800, fontSize: 16, margin: "0 0 6px", color: C.ink }}>
-            Elige un escenario y presiona <span style={{ color: C.rosa }}>“Comer 🍎”</span>. La animación te muestra el recorrido de la glucosa:
+          <p className="fd-body" style={{ fontWeight: 800, fontSize: 18, margin: "0 0 10px", color: C.ink }}>
+            1) Elige quién es el paciente. 2) Presiona el botón grande <span style={{ color: C.rosa }}>“Comer 🍎”</span>. Observa el recorrido paso a paso.
           </p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0 16px" }}>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "12px 0 16px" }}>
             {Object.entries(scenarios).map(([id, s]) => (
               <button
                 key={id}
                 onClick={() => resetScene(id)}
                 className="fd-body"
                 style={{
-                  border: `2px solid ${scenario === id ? s.color : C.line}`,
+                  border: `3px solid ${scenario === id ? s.color : C.line}`,
                   background: scenario === id ? s.soft : "#fff",
-                  borderRadius: 999, padding: "10px 16px", fontWeight: 800, fontSize: 14,
+                  borderRadius: 999, padding: "12px 20px", fontWeight: 800, fontSize: 16,
                   color: C.ink, cursor: "pointer",
                 }}
               >
@@ -467,109 +503,151 @@ function Llave({ onBack, onComplete }) {
             ))}
           </div>
 
-          {/* ESCENA DEL DIAGRAMA */}
-          <div style={{ position: "relative", height: 380, background: "linear-gradient(180deg,#FCF6F3,#F3ECE6)", borderRadius: 20, border: `1px solid ${C.line}`, overflow: "hidden" }}>
+          {/* SUBTÍTULO GRANDE del paso actual */}
+          <div
+            className="fd-body"
+            style={{
+              minHeight: 56, display: "flex", alignItems: "center", justifyContent: "center",
+              textAlign: "center", background: phase === 0 ? C.bg : sc.soft,
+              border: `2px solid ${phase === 0 ? C.line : sc.color}`, borderRadius: 16,
+              padding: "12px 16px", marginBottom: 12, fontSize: 18, fontWeight: 800,
+              color: C.ink, lineHeight: 1.35, transition: "all .4s",
+            }}
+          >
+            {phase === 0 ? "Presiona “Comer 🍎” para comenzar 👇" : subtitulos[scenario][phase]}
+          </div>
 
-            {/* Etiqueta zona sangre / célula */}
-            <div className="fd-body" style={{ position: "absolute", top: 10, left: 14, fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em", background: "#fff", borderRadius: 999, padding: "3px 10px", border: `1px solid ${C.line}` }}>🩸 TORRENTE SANGUÍNEO</div>
-            <div className="fd-body" style={{ position: "absolute", top: 10, right: 14, fontSize: 12, fontWeight: 800, color: C.sub, letterSpacing: ".08em", background: "#fff", borderRadius: 999, padding: "3px 10px", border: `1px solid ${C.line}` }}>⚡ CÉLULA</div>
+          {/* ESCENA DEL DIAGRAMA (más alta) */}
+          <div style={{ position: "relative", height: 440, background: "linear-gradient(180deg,#FCF6F3,#F3ECE6)", borderRadius: 20, border: `1px solid ${C.line}`, overflow: "hidden" }}>
 
-            {/* CÉLULA (lado derecho) */}
+            {/* RÍO / TORRENTE SANGUÍNEO (mitad izquierda, bien visible) */}
             <div style={{
-              position: "absolute", right: "3%", top: "18%", width: "42%", height: "70%",
-              background: "rgba(255,255,255,.75)", border: `4px solid ${C.verde}`,
-              borderRadius: "48% 52% 55% 45% / 52% 46% 54% 48%",
+              position: "absolute", left: 0, top: 0, width: "52%", height: "100%",
+              background: "linear-gradient(180deg, #FBE3E3, #F6CFCF)",
+              borderRight: `3px dashed ${C.rosa}`,
             }} />
-            <div className="fd-body" style={{ position: "absolute", right: "20%", top: "80%", fontSize: 13, fontWeight: 800, color: C.verde }}>⚡ Célula</div>
+            <div className="fd-body" style={{ position: "absolute", top: 12, left: 14, fontSize: 15, fontWeight: 900, color: "#B0596A", letterSpacing: ".04em" }}>
+              🩸 TORRENTE SANGUÍNEO
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#B0596A" }}>(tu sangre)</div>
+            </div>
 
-            {/* CERRADURA en la membrana */}
-            <div style={{ position: "absolute", right: "43%", top: "48%", transform: "translateY(-50%)", textAlign: "center" }}>
-              <div style={{ fontSize: 34, filter: !sc.lockOpen && phase >= 2 ? "grayscale(.3) sepia(.4)" : "none", transition: "all .4s" }}>
-                {sc.lockOpen && phase >= 3 ? "🔓" : "🔒"}
+            {/* CÉLULA (lado derecho) con animación de energía al recibir glucosa */}
+            <div
+              className={phase >= 4 && sc.entering > 0 ? "fd-energy" : ""}
+              style={{
+                position: "absolute", right: "3%", top: "20%", width: "40%", height: "62%",
+                background: phase >= 4 && sc.entering > 0 ? "rgba(223,235,226,.95)" : "rgba(255,255,255,.8)",
+                border: `5px solid ${C.verde}`,
+                borderRadius: "48% 52% 55% 45% / 52% 46% 54% 48%",
+                transition: "background .5s",
+              }}
+            />
+            <div className="fd-body" style={{ position: "absolute", right: "14%", top: "12%", fontSize: 16, fontWeight: 900, color: C.verde }}>⚡ CÉLULA</div>
+            {/* Chispas de energía cuando entra glucosa */}
+            {phase >= 4 && sc.entering > 0 && (
+              <>
+                <div className="fd-spark" style={{ position: "absolute", right: "30%", top: "28%", fontSize: 26 }}>⚡</div>
+                <div className="fd-spark" style={{ position: "absolute", right: "10%", top: "62%", fontSize: 22, animationDelay: ".3s" }}>✨</div>
+                <div className="fd-body fd-pop" style={{ position: "absolute", right: "16%", top: "84%", fontSize: 15, fontWeight: 900, color: C.verde, background: "#fff", borderRadius: 999, padding: "3px 12px", border: `2px solid ${C.verde}` }}>¡ENERGÍA! 💪</div>
+              </>
+            )}
+
+            {/* CERRADURA en la puerta de la célula (con temblor si resiste) */}
+            <div style={{ position: "absolute", right: "41%", top: "50%", transform: "translateY(-50%)", textAlign: "center", zIndex: 3 }}>
+              <div
+                className={!sc.lockOpen && scenario === "tipo2" && phase >= 3 ? "fd-shake" : ""}
+                style={{ fontSize: 44, transition: "all .4s" }}
+              >
+                {sc.lockOpen && phase >= 4 ? "🔓" : "🔒"}
               </div>
-              <div className="fd-body" style={{ fontSize: 11, fontWeight: 800, color: C.ink, background: "#fff", borderRadius: 999, padding: "1px 8px", marginTop: 2, border: `1px solid ${C.line}` }}>Cerradura</div>
-              {!sc.lockOpen && scenario === "tipo2" && phase >= 2 && (
-                <div className="fd-body fd-pop" style={{ fontSize: 10, fontWeight: 800, color: C.terra, marginTop: 3 }}>resistente</div>
+              <div className="fd-body" style={{ fontSize: 13, fontWeight: 900, color: C.ink, background: "#fff", borderRadius: 999, padding: "2px 10px", marginTop: 3, border: `2px solid ${C.line}` }}>CERRADURA</div>
+              {!sc.lockOpen && scenario === "tipo2" && phase >= 3 && (
+                <div className="fd-body fd-pop" style={{ fontSize: 12, fontWeight: 900, color: C.terra, marginTop: 4, background: "#fff", borderRadius: 999, padding: "2px 8px", border: `2px solid ${C.terra}` }}>¡SE RESISTE! 🔒</div>
               )}
             </div>
 
-            {/* PÁNCREAS (abajo izquierda) */}
-            <div style={{ position: "absolute", left: "3%", bottom: "6%", textAlign: "center" }}>
-              <div style={{ fontSize: 40, opacity: sc.pancreasOn ? 1 : 0.4, filter: sc.pancreasOn ? "none" : "grayscale(1)", transition: "all .4s" }}>🫀</div>
-              <div className="fd-body" style={{ fontSize: 11, fontWeight: 800, color: C.ink, background: "#fff", borderRadius: 999, padding: "1px 8px", border: `1px solid ${C.line}` }}>Páncreas</div>
-              <div className="fd-body" style={{ fontSize: 10, fontWeight: 700, color: sc.pancreasOn ? C.verde : C.rosa, marginTop: 2 }}>
-                {sc.pancreasOn ? "produce insulina" : "no produce"}
+            {/* PÁNCREAS (abajo izquierda, grande, late al producir) */}
+            <div style={{ position: "absolute", left: "4%", bottom: "8%", textAlign: "center", zIndex: 3 }}>
+              <div
+                className={sc.pancreasOn && phase >= 3 ? "fd-beat" : ""}
+                style={{ fontSize: 54, opacity: sc.pancreasOn ? 1 : 0.35, filter: sc.pancreasOn ? "none" : "grayscale(1)", transition: "all .4s" }}
+              >🫀</div>
+              <div className="fd-body" style={{ fontSize: 14, fontWeight: 900, color: C.ink, background: "#fff", borderRadius: 999, padding: "2px 12px", border: `2px solid ${C.line}` }}>PÁNCREAS</div>
+              <div className="fd-body" style={{ fontSize: 12, fontWeight: 800, color: sc.pancreasOn ? C.verde : C.rosa, marginTop: 3 }}>
+                {sc.pancreasOn ? "fabrica insulina 🔑" : "no fabrica insulina 🚫"}
               </div>
             </div>
 
             {/* COMIDA que entra (fase 1) */}
             <div style={{
-              position: "absolute", left: phase >= 1 ? "14%" : "-10%", top: "16%",
-              fontSize: 30, transition: "left 1s ease", opacity: phase >= 2 ? 0 : 1,
+              position: "absolute", left: phase >= 1 ? "10%" : "-14%", top: "14%",
+              fontSize: 40, transition: "left 2s ease", opacity: phase >= 2 ? 0 : 1, zIndex: 2,
             }}>
-              🍎<div className="fd-body" style={{ fontSize: 10, fontWeight: 800, color: C.ink, textAlign: "center" }}>Comida</div>
+              🍎<div className="fd-body" style={{ fontSize: 13, fontWeight: 900, color: C.ink, textAlign: "center" }}>COMIDA</div>
             </div>
 
-            {/* GLUCOSA en sangre */}
+            {/* GLUCOSA en sangre (bolitas grandes) */}
             {bloodGlucose.map((p, i) => {
-              const goesIn = phase >= 3 && i < sc.entering;
+              const goesIn = phase >= 4 && i < sc.entering;
               const pos = goesIn ? cellGlucose[i] : p;
-              const visible = phase >= 1; // aparece cuando comes
+              const visible = phase >= 2;
               return (
                 <div key={i} style={{
                   position: "absolute", left: `${pos.x}%`, top: `${pos.y}%`,
-                  width: 20, height: 20, borderRadius: "50%",
+                  width: 28, height: 28, borderRadius: "50%",
                   background: goesIn ? C.verde : C.terra,
-                  border: "2px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.18)",
-                  opacity: visible ? 1 : 0,
-                  transition: "all 1.1s cubic-bezier(.5,0,.3,1), opacity .5s",
+                  border: "3px solid #fff", boxShadow: "0 2px 6px rgba(0,0,0,.2)",
+                  opacity: visible ? 1 : 0, zIndex: 2,
+                  transition: "all 2s cubic-bezier(.5,0,.3,1), opacity .6s",
                 }} />
               );
             })}
             {/* etiqueta glucosa */}
-            {phase >= 1 && (
-              <div className="fd-body fd-pop" style={{ position: "absolute", left: "20%", top: "20%", fontSize: 11, fontWeight: 800, color: C.terra, background: "#fff", borderRadius: 999, padding: "1px 8px", border: `1px solid ${C.line}` }}>🟠 Glucosa</div>
+            {phase >= 2 && (
+              <div className="fd-body fd-pop" style={{ position: "absolute", left: "8%", top: "30%", fontSize: 13, fontWeight: 900, color: C.terra, background: "#fff", borderRadius: 999, padding: "2px 10px", border: `2px solid ${C.terra}`, zIndex: 3 }}>🟠 GLUCOSA (azúcar)</div>
             )}
 
-            {/* LLAVES (insulina) saliendo del páncreas hacia la cerradura (fase 2) */}
+            {/* LLAVES (insulina) saliendo del páncreas hacia la cerradura (fase 3) */}
             {Array.from({ length: sc.keys }).map((_, i) => (
               <div key={i} style={{
                 position: "absolute",
-                left: phase >= 2 ? `${44 + i * 2}%` : "8%",
-                top: phase >= 2 ? `${44 + i * 3}%` : "82%",
-                fontSize: 24, transition: "all 1.1s ease",
-                opacity: phase >= 1 ? 1 : 0,
+                left: phase >= 3 ? `${40 + i * 2}%` : "9%",
+                top: phase >= 3 ? `${46 + i * 3}%` : "80%",
+                fontSize: 30, transition: "all 2s ease", zIndex: 2,
+                opacity: phase >= 2 ? 1 : 0,
               }}>🔑</div>
             ))}
-            {sc.keys === 0 && phase >= 2 && (
-              <div className="fd-body fd-pop" style={{ position: "absolute", left: "20%", top: "88%", fontSize: 11, fontWeight: 800, color: C.rosa, background: "#fff", borderRadius: 999, padding: "2px 10px", border: `1px solid ${C.line}` }}>
-                Sin insulina 🚫🔑
+            {sc.keys === 0 && phase >= 3 && (
+              <div className="fd-body fd-pop" style={{ position: "absolute", left: "8%", top: "70%", fontSize: 13, fontWeight: 900, color: C.rosa, background: "#fff", borderRadius: 999, padding: "3px 12px", border: `2px solid ${C.rosa}`, zIndex: 3 }}>
+                SIN INSULINA 🚫🔑
               </div>
             )}
           </div>
 
-          {/* Controles */}
-          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap", alignItems: "center" }}>
-            <BigBtn onClick={play} disabled={playing} bg={C.rosa}>{playing ? "Reproduciendo…" : "Comer 🍎"}</BigBtn>
-            {phase > 0 && !playing && <BigBtn onClick={() => setPhase(0)} bg="#fff" color={C.ink}>↺ Reiniciar</BigBtn>}
+          {/* Controles grandes */}
+          <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap", alignItems: "center", justifyContent: "center" }}>
+            <button
+              onClick={play}
+              disabled={playing}
+              className="fd-body"
+              style={{
+                background: playing ? C.line : C.rosa, color: playing ? C.sub : "#fff",
+                border: "none", borderRadius: 999, padding: "16px 36px", fontSize: 20, fontWeight: 900,
+                cursor: playing ? "default" : "pointer", boxShadow: playing ? "none" : "0 4px 12px rgba(66,61,58,.2)",
+              }}
+            >
+              {playing ? "▶ Reproduciendo…" : "Comer 🍎"}
+            </button>
+            {phase > 0 && !playing && <BigBtn onClick={() => setPhase(0)} bg="#fff" color={C.ink}>↺ Volver a empezar</BigBtn>}
           </div>
 
           {/* Explicación del escenario (aparece al terminar) */}
-          {phase >= 3 && (
-            <div className="fd-body fd-pop" style={{ marginTop: 14, background: sc.soft, borderRadius: 16, padding: "14px 16px", border: `2px solid ${sc.color}` }}>
-              <div style={{ fontWeight: 800, fontSize: 15.5, color: C.ink, marginBottom: 4 }}>{sc.name}: {sc.titulo}</div>
-              <div style={{ fontSize: 14.5, lineHeight: 1.6, color: C.ink }}>{sc.msg}</div>
+          {phase >= 4 && (
+            <div className="fd-body fd-pop" style={{ marginTop: 16, background: sc.soft, borderRadius: 16, padding: "16px 18px", border: `2px solid ${sc.color}` }}>
+              <div style={{ fontWeight: 900, fontSize: 17, color: C.ink, marginBottom: 6 }}>{sc.name}: {sc.titulo}</div>
+              <div style={{ fontSize: 16, lineHeight: 1.65, color: C.ink }}>{sc.msg}</div>
             </div>
           )}
-
-          {/* Semáforo comparativo de los 3 */}
-          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", marginTop: 14 }}>
-            {Object.entries(scenarios).map(([id, s]) => (
-              <div key={id} className="fd-body" style={{ background: "#fff", border: `1px solid ${scenario === id ? s.color : C.line}`, borderRadius: 12, padding: "8px 10px", fontSize: 12.5, color: C.ink }}>
-                <b style={{ color: s.color }}>● {s.short}:</b> {id === "normal" ? "llaves ✔ · cerradura abre ✔" : id === "tipo1" ? "sin llaves ✖ · glucosa atrapada" : "llaves ✔ · cerradura resiste ✖"}
-              </div>
-            ))}
-          </div>
 
           <div style={{ marginTop: 18, textAlign: "right" }}>
             <BigBtn onClick={() => setStep(2)} bg={C.ink}>Ya lo entendí, ¡al reto! →</BigBtn>
